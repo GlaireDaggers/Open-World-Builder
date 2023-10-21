@@ -277,44 +277,59 @@ namespace OpenWorldBuilder
             ImGui.PopStyleVar();
         }
 
-        public void GlobalTransformHandle(ref Vector3 position, ref Quaternion rotation, ref Vector3 scale, bool localSpace = false)
+        public void GlobalTransformHandle(ref Vector3 position, ref Quaternion rotation, ref Vector3 scale, Matrix parentMatrix, bool localSpace = false)
         {
             switch (_transformOp)
             {
                 case TransformOperation.Translate:
-                    PositionHandle(ref position, rotation, localSpace);
+                    PositionHandle(ref position, rotation, parentMatrix, localSpace);
                     break;
                 case TransformOperation.Rotate:
-                    RotationHandle(ref rotation, position, localSpace);
+                    RotationHandle(ref rotation, position, parentMatrix, localSpace);
                     break;
                 case TransformOperation.Scale:
-                    ScaleHandle(ref scale, rotation, position, localSpace);
+                    ScaleHandle(ref scale, rotation, position, parentMatrix, localSpace);
                     break;
             }
         }
 
-        public void PositionHandle(ref Vector3 position, Quaternion rotation, bool localSpace = false)
+        public void PositionHandle(ref Vector3 position, Quaternion rotation, Matrix parentMatrix, bool localSpace = false)
         {
-            Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position);
-            ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.TRANSLATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+            Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.TRANSLATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
-            transform.Decompose(out _, out _, out position);
+            transform *= Matrix.Invert(parentMatrix);
+
+            if (mod)
+            {
+                transform.Decompose(out _, out _, out position);
+            }
         }
 
-        public void RotationHandle(ref Quaternion rotation, Vector3 position, bool localSpace = false)
+        public void RotationHandle(ref Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false)
         {
-            Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position);
-            ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.ROTATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+            Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.ROTATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
-            transform.Decompose(out _, out rotation, out _);
+            transform *= Matrix.Invert(parentMatrix);
+
+            if (mod)
+            {
+                transform.Decompose(out _, out rotation, out _);
+            }
         }
 
-        public void ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, bool localSpace = false)
+        public void ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false)
         {
-            Matrix transform = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position);
-            ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+            Matrix transform = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
-            transform.Decompose(out scale, out _, out _);
+            transform *= Matrix.Invert(parentMatrix);
+
+            if (mod)
+            {
+                transform.Decompose(out scale, out _, out _);
+            }
         }
 
         protected virtual void DrawViewport(Matrix view, Matrix projection)

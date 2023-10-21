@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using ImGuiNET;
+using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 
 namespace OpenWorldBuilder
@@ -14,6 +15,35 @@ namespace OpenWorldBuilder
         public Vector3 position = Vector3.Zero;
         public Quaternion rotation = Quaternion.Identity;
         public Vector3 scale = Vector3.One;
+
+        public Matrix World
+        {
+            get
+            {
+                // kinda stupid but: BasicEffect will *crash* in debug mode if scale on any axis is 0
+                Vector3 sc = scale;
+                if (sc.X == 0.0f)
+                {
+                    sc.X = 0.001f;
+                }
+                if (sc.Y == 0.0f)
+                {
+                    sc.Y = 0.001f;
+                }
+                if (sc.Z == 0.0f)
+                {
+                    sc.Z = 0.001f;
+                }
+
+                Matrix trs = Matrix.CreateScale(sc) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position);
+                if (Parent != null)
+                {
+                    trs *= Parent.World;
+                }
+
+                return trs;
+            }
+        }
 
         /// <summary>
         /// Node's parent, if any
@@ -45,6 +75,14 @@ namespace OpenWorldBuilder
 
         public virtual void Draw(Matrix view, Matrix projection)
         {
+        }
+
+        public virtual void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)
+        {
+            Matrix parentMatrix = Parent?.World ?? Matrix.Identity;
+
+            viewport.GlobalTransformHandle(ref position, ref rotation,
+                ref scale, parentMatrix, localSpace);
         }
 
         public virtual void DrawInspector()
@@ -134,6 +172,10 @@ namespace OpenWorldBuilder
     /// </summary>
     public class SceneRootNode : Node
     {
+        public override void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)
+        {
+        }
+
         public override void DrawInspector()
         {
             ImGui.InputText("Name", ref name, 1024);

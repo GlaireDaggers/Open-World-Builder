@@ -29,10 +29,9 @@ namespace OpenWorldBuilder
         {
             base.DrawHandles(view, projection);
             
-            if (App.Instance!.activeNode != null && App.Instance!.activeNode != App.Instance!.ActiveLevel.root)
+            if (App.Instance!.activeNode != null)
             {
-                GlobalTransformHandle(ref App.Instance!.activeNode.position, ref App.Instance!.activeNode.rotation,
-                    ref App.Instance!.activeNode.scale, _localSpace);
+                App.Instance!.activeNode.DrawHandles(view, projection, this, _localSpace);
             }
         }
 

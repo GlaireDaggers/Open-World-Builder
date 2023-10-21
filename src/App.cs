@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 using Newtonsoft.Json;
-
+using ObjLoader.Loader.Loaders;
 using SDL2;
 
 namespace OpenWorldBuilder
@@ -34,6 +34,8 @@ namespace OpenWorldBuilder
 
         public KeyboardState curKeyboardState;
         public KeyboardState prevKeyboardState;
+
+        public IObjLoader objLoader;
 
         private ImGuiRenderer? _imGuiRenderer;
 
@@ -75,8 +77,13 @@ namespace OpenWorldBuilder
         {
             SDL.SDL_MaximizeWindow(Window.Handle);
 
+            var objLoaderFactory = new ObjLoaderFactory();
+            objLoader = objLoaderFactory.Create();
+
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer!.RebuildFontAtlas();
+
+            AddNodeFactory(new StaticMeshNodeFactory());
 
             AddMenuItem("Nodes/New Node", () => {
                 Node node = new Node();
@@ -251,11 +258,11 @@ namespace OpenWorldBuilder
             {
                 if (factory.CanHandle(assetPath))
                 {
-                    try
+                    //try
                     {
                         return factory.Process(assetPath);
                     }
-                    catch {}
+                    //catch {}
                 }
             }
 
