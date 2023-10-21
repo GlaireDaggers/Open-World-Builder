@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "OpenWorldBuilder": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

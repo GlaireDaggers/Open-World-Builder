@@ -1,0 +1,6 @@
+[submodule "deps/FNA"]
+	path = deps/FNA
+	url = https://github.com/FNA-XNA/FNA.git
+[submodule "deps/ImGui.NET"]
+	path = deps/ImGui.NET
+	url = https://github.com/GlaireDaggers/ImGui.NET.git
