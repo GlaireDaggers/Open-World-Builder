@@ -122,7 +122,7 @@ namespace OpenWorldBuilder
             var v1 = new Vector3(vtx1.X, vtx1.Y, vtx1.Z);
             var v2 = new Vector3(vtx2.X, vtx2.Y, vtx2.Z);
 
-            var faceNormal = Vector3.Cross(v1 - v0, v2 - v0) * -1f;
+            var faceNormal = Vector3.Cross(v1 - v0, v2 - v0);
             faceNormal.Normalize();
 
             return new ObjLoader.Loader.Data.VertexData.Normal(faceNormal.X, faceNormal.Y, faceNormal.Z);

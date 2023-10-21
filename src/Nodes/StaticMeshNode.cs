@@ -24,7 +24,7 @@ namespace OpenWorldBuilder
             };
 
             _fx.DirectionalLight0.DiffuseColor = new Vector3(1f, 1f, 1f);
-            _fx.DirectionalLight0.Direction = new Vector3(0f, 1f, 0f);
+            _fx.DirectionalLight0.Direction = new Vector3(-1f, -1f, -1f);
             _fx.DirectionalLight0.SpecularColor = new Vector3(0f, 0f, 0f);
             _fx.DirectionalLight0.Enabled = true;
         }
