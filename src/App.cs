@@ -19,6 +19,11 @@ namespace OpenWorldBuilder
 
         public ImGuiRenderer? ImGuiRenderer => _imGuiRenderer;
 
+        public Project ActiveProject => _project;
+        public Level ActiveLevel => _level;
+        
+        public Node? activeNode;
+
         public MouseState curMouseState;
         public MouseState prevMouseState;
 
@@ -33,6 +38,9 @@ namespace OpenWorldBuilder
         private UserConfig _config = new UserConfig();
         private string _prefPath;
         private string _configPath;
+
+        private Level _level = new Level();
+        private Project _project = new Project();
 
         public App()
         {
@@ -60,14 +68,29 @@ namespace OpenWorldBuilder
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer!.RebuildFontAtlas();
 
-            AddMenuItem("Window/Test", () =>
+            AddMenuItem("Window/Project Settings", () =>
             {
-                GetWindow<TestWindow>();
+                GetWindow<ProjectSettingsWindow>();
             });
 
-            AddMenuItem("Window/Viewport Test", () =>
+            AddMenuItem("Window/Project Browser", () =>
             {
-                GetWindow<ViewportWindow>();
+                GetWindow<ProjectBrowserWindow>();
+            });
+
+            AddMenuItem("Window/Inspector", () =>
+            {
+                GetWindow<InspectorWindow>();
+            });
+
+            AddMenuItem("Window/Hierarchy", () =>
+            {
+                GetWindow<SceneHierarchyWindow>();
+            });
+
+            AddMenuItem("Window/Scene", () =>
+            {
+                GetWindow<SceneWindow>();
             });
 
             if (File.Exists(_configPath))
@@ -91,6 +114,8 @@ namespace OpenWorldBuilder
                 }
                 catch {}
             }
+
+            _level.root.AddChild(new Node());
 
             base.Initialize();
         }
@@ -136,11 +161,13 @@ namespace OpenWorldBuilder
             {
                 if (w is T)
                 {
+                    w.Focus();
                     return (T)w;
                 }
             }
 
             T win = new();
+            win.Focus();
             _windows.Add(win);
 
             return win;
@@ -152,11 +179,13 @@ namespace OpenWorldBuilder
             {
                 if (t.IsAssignableFrom(w.GetType()))
                 {
+                    w.Focus();
                     return w;
                 }
             }
 
             EditorWindow win = (EditorWindow)Activator.CreateInstance(t)!;
+            win.Focus();
             _windows.Add(win);
 
             return win;

@@ -2,12 +2,6 @@
 
 using Microsoft.Xna.Framework;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace OpenWorldBuilder
 {
     /// <summary>
@@ -23,6 +17,8 @@ namespace OpenWorldBuilder
 
         private int _id;
         private bool _open;
+
+        private bool _queueFocus = false;
 
         public EditorWindow()
         {
@@ -42,11 +38,18 @@ namespace OpenWorldBuilder
         public void Draw(GameTime time)
         {
             PreDraw();
+
+            if (_queueFocus)
+            {
+                ImGui.SetNextWindowFocus();
+                _queueFocus = false;
+            }
+
             if (ImGui.Begin(title + "##" + _id, ref _open))
             {
                 OnDraw(time);
-                ImGui.End();
             }
+            ImGui.End();
             PostDraw();
         }
 
@@ -56,6 +59,11 @@ namespace OpenWorldBuilder
 
         public virtual void Dispose()
         {
+        }
+
+        public void Focus()
+        {
+            _queueFocus = true;
         }
     }
 }
