@@ -29,6 +29,7 @@ namespace OpenWorldBuilder
 
         public void AddChild(Node child)
         {
+            Debug.Assert(child != this);
             Debug.Assert(child.Parent == null);
 
             _children.Add(child);

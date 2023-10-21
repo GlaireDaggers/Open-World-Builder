@@ -1,5 +1,6 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using NativeFileDialogSharp;
 
 namespace OpenWorldBuilder
 {
@@ -16,7 +17,14 @@ namespace OpenWorldBuilder
 
             ImGui.InputText("Content Path", ref App.Instance!.ActiveProject.contentPath, 1024);
             ImGui.SameLine();
-            ImGui.Button("Browse");
+            if (ImGui.Button("Browse"))
+            {
+                var result = Dialog.FolderPicker(App.Instance!.ActiveProject.contentPath);
+                if (result.IsOk)
+                {
+                    App.Instance!.SetContentPath(result.Path);
+                }
+            }
         }
     }
 }

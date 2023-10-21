@@ -11,8 +11,11 @@ using SDL2;
 
 namespace OpenWorldBuilder
 {
+    public delegate void ContentFolderChangedHandler(DirectoryInfo directory);
+
     public class App : Game
     {
+        public static object? dragPayload = null;
         public static App? Instance { get; private set; }
 
         public bool consumeMouseCursor = false;
@@ -21,6 +24,8 @@ namespace OpenWorldBuilder
 
         public Project ActiveProject => _project;
         public Level ActiveLevel => _level;
+
+        public event ContentFolderChangedHandler OnContentFolderChanged;
         
         public Node? activeNode;
 
@@ -32,6 +37,8 @@ namespace OpenWorldBuilder
 
         private ImGuiRenderer? _imGuiRenderer;
 
+        private List<AssetNodeFactory> _nodeFactories = new List<AssetNodeFactory>();
+
         private List<EditorWindow> _windows = new List<EditorWindow>();
         private MenuContainer _rootMenu = new MenuContainer();
 
@@ -41,6 +48,9 @@ namespace OpenWorldBuilder
 
         private Level _level = new Level();
         private Project _project = new Project();
+
+        private FileSystemWatcher? _contentWatcher;
+        private bool _queueUpdateContent = false;
 
         public App()
         {
@@ -67,6 +77,18 @@ namespace OpenWorldBuilder
 
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer!.RebuildFontAtlas();
+
+            AddMenuItem("Nodes/New Node", () => {
+                Node node = new Node();
+                if (activeNode != null)
+                {
+                    activeNode.AddChild(node);
+                }
+                else
+                {
+                    _level.root.AddChild(node);
+                }
+            });
 
             AddMenuItem("Window/Project Settings", () =>
             {
@@ -138,6 +160,20 @@ namespace OpenWorldBuilder
 
         protected override void Draw(GameTime gameTime)
         {
+            lock (this)
+            {
+                if (_queueUpdateContent)
+                {
+                    _queueUpdateContent = false;
+                    
+                    try
+                    {
+                        OnContentFolderChanged?.Invoke(new DirectoryInfo(_project.contentPath));
+                    }
+                    catch {}
+                }
+            }
+
             prevKeyboardState = curKeyboardState;
             prevMouseState = curMouseState;
 
@@ -202,6 +238,75 @@ namespace OpenWorldBuilder
             }
 
             c.subItems.Add(new MenuItem(folders[folders.Length - 1], callback));
+        }
+
+        public void AddNodeFactory(AssetNodeFactory nodeFactory)
+        {
+            _nodeFactories.Add(nodeFactory);
+        }
+
+        public Node? TryCreateNode(string assetPath)
+        {
+            foreach (var factory in _nodeFactories)
+            {
+                if (factory.CanHandle(assetPath))
+                {
+                    try
+                    {
+                        return factory.Process(assetPath);
+                    }
+                    catch {}
+                }
+            }
+
+            Console.WriteLine("No node factories for asset: " + assetPath);
+            return null;
+        }
+
+        public void SetContentPath(string newPath)
+        {
+            _project.contentPath = newPath;
+
+            try
+            {
+                if (_contentWatcher != null)
+                {
+                    _contentWatcher.EnableRaisingEvents = false;
+                    _contentWatcher.Dispose();
+                }
+
+                _contentWatcher = new FileSystemWatcher(newPath)
+                {
+                    NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName,
+                    IncludeSubdirectories = true
+                };
+
+                _contentWatcher.Created += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateContent = true;
+                    }
+                };
+
+                _contentWatcher.Deleted += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateContent = true;
+                    }
+                };
+
+                _contentWatcher.Renamed += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateContent = true;
+                    }
+                };
+
+                _contentWatcher.EnableRaisingEvents = true;
+
+                OnContentFolderChanged?.Invoke(new DirectoryInfo(newPath));
+            }
+            catch {}
         }
 
         protected void DrawUI(GameTime time)

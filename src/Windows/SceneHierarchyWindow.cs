@@ -50,6 +50,27 @@ namespace OpenWorldBuilder
 
             if (isOpen)
             {
+                if (ImGui.BeginDragDropTarget())
+                {
+                    var payload = ImGui.AcceptDragDropPayload("ASSET");
+                    unsafe
+                    {
+                        if (payload.NativePtr != null)
+                        {
+                            Console.WriteLine("ACCEPT: " + App.dragPayload);
+
+                            // try to construct a node as child
+                            if (App.Instance!.TryCreateNode((string)App.dragPayload!) is Node newNode)
+                            {
+                                node.AddChild(newNode);
+                            }
+                            
+                            App.dragPayload = null;
+                        }
+                    }
+                    ImGui.EndDragDropTarget();
+                }
+
                 foreach (var child in node.Children)
                 {
                     DrawNode(child, ref selectedNode);
