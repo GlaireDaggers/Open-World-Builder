@@ -5,6 +5,14 @@ namespace OpenWorldBuilder
 {
     public class SceneHierarchyWindow : EditorWindow
     {
+        private struct QueuedReparent
+        {
+            public Node node;
+            public Node newParent;
+        }
+
+        private Queue<QueuedReparent> _reparent = new Queue<QueuedReparent>();
+
         public SceneHierarchyWindow() : base()
         {
             title = "Hierarchy";
@@ -16,6 +24,13 @@ namespace OpenWorldBuilder
 
             Node? selectedNode = null;
             DrawNode(App.Instance!.ActiveLevel.root, ref selectedNode);
+
+            while (_reparent.Count > 0)
+            {
+                var op = _reparent.Dequeue();
+                op.node.Parent?.RemoveChild(op.node);
+                op.newParent.AddChild(op.node);
+            }
 
             if (selectedNode != null)
             {
@@ -43,6 +58,13 @@ namespace OpenWorldBuilder
 
             bool isOpen = ImGui.TreeNodeEx(node.name, flags);
 
+            if (ImGui.BeginDragDropSource())
+            {
+                App.dragPayload = node;
+                ImGui.SetDragDropPayload("NODE", 0, 0);
+                ImGui.EndDragDropSource();
+            }
+
             if (ImGui.IsItemClicked())
             {
                 selectedNode = node;
@@ -66,6 +88,25 @@ namespace OpenWorldBuilder
                             }
                             
                             App.dragPayload = null;
+                        }
+                    }
+
+                    payload = ImGui.AcceptDragDropPayload("NODE");
+                    unsafe
+                    {
+                        if (payload.NativePtr != null)
+                        {
+                            Node payloadNode = (Node)App.dragPayload!;
+                            Console.WriteLine("ACCEPT NODE: " + payloadNode.name);
+
+                            if (payloadNode.Parent != node)
+                            {
+                                _reparent.Enqueue(new QueuedReparent
+                                {
+                                    node = payloadNode,
+                                    newParent = node
+                                });
+                            }
                         }
                     }
                     ImGui.EndDragDropTarget();

@@ -9,7 +9,7 @@ namespace OpenWorldBuilder
     /// <summary>
     /// Base class for a node in a scene hierarchy
     /// </summary>
-    public class Node
+    public class Node : IDisposable
     {
         public string name = "Node";
         public Vector3 position = Vector3.Zero;
@@ -56,6 +56,14 @@ namespace OpenWorldBuilder
         public ReadOnlyCollection<Node> Children => _children.AsReadOnly();
 
         private List<Node> _children = new List<Node>();
+
+        public virtual void Dispose()
+        {
+            foreach (var child in _children)
+            {
+                child.Dispose();
+            }
+        }
 
         public void AddChild(Node child)
         {

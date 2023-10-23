@@ -9,5 +9,6 @@ namespace OpenWorldBuilder
     public class UserConfig
     {
         public List<string> openWindows = new List<string>();
+        public List<string> recentProjects = new List<string>();
     }
 }

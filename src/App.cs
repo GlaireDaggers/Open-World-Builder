@@ -1,10 +1,11 @@
-﻿using ImGuiNET;
+﻿using System.Security.Cryptography.X509Certificates;
+using ImGuiNET;
 
 using ImGuizmoNET;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-
+using NativeFileDialogSharp;
 using Newtonsoft.Json;
 using ObjLoader.Loader.Loaders;
 using SDL2;
@@ -24,6 +25,10 @@ namespace OpenWorldBuilder
 
         public Project ActiveProject => _project;
         public Level ActiveLevel => _level;
+
+        public string? ProjectPath => _projectPath;
+        public string? ProjectFolder => _projectPath == null ? null : Path.GetDirectoryName(_projectPath);
+        public string ContentPath => ProjectFolder == null ? _project.contentPath : Path.Combine(ProjectFolder, _project.contentPath);
 
         public event ContentFolderChangedHandler OnContentFolderChanged;
         
@@ -50,6 +55,7 @@ namespace OpenWorldBuilder
 
         private Level _level = new Level();
         private Project _project = new Project();
+        private string? _projectPath = null;
 
         private FileSystemWatcher? _contentWatcher;
         private bool _queueUpdateContent = false;
@@ -83,7 +89,104 @@ namespace OpenWorldBuilder
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer!.RebuildFontAtlas();
 
+            if (File.Exists(_configPath))
+            {
+                var configJson = File.ReadAllText(_configPath);
+                _config = JsonConvert.DeserializeObject<UserConfig>(configJson) ?? new UserConfig();
+
+                Console.WriteLine("User config loaded");
+            }
+            else
+            {
+                _config = new UserConfig();
+            }
+
             AddNodeFactory(new StaticMeshNodeFactory());
+
+            AddMenuItem("File/Open Project", () => {
+                // todo: prompt to save project if changes have been made
+
+                var result = Dialog.FileOpen(".owbproj");
+                if (result.IsOk)
+                {
+                    try
+                    {
+                        string projData = File.ReadAllText(result.Path);
+                        Project proj = JsonConvert.DeserializeObject<Project>(projData)!;
+                        _project = proj;
+                        _level.Dispose();
+                        _level = new Level();
+                        _projectPath = result.Path;
+                        if (!_config.recentProjects.Contains(result.Path))
+                        {
+                            _config.recentProjects.Add(result.Path);
+                        }
+                        UpdateContent();
+                    }
+                    catch {}
+                }
+            });
+
+            foreach (var proj in _config.recentProjects)
+            {
+                string projpath = proj;
+                AddMenuItem($"File/Recent Projects/{Path.GetFileName(projpath)}", () => {
+                    try
+                    {
+                        string projData = File.ReadAllText(projpath);
+                        Project proj = JsonConvert.DeserializeObject<Project>(projData)!;
+                        _project = proj;
+                        _level.Dispose();
+                        _level = new Level();
+                        _projectPath = projpath;
+                        UpdateContent();
+                    }
+                    catch {}
+                });
+            }
+
+            AddMenuItem("File/Save Project", () => {
+                // todo: save currently open level if necessary
+
+                string projData = JsonConvert.SerializeObject(_project);
+
+                if (_projectPath is string path)
+                {
+                    File.WriteAllText(path, projData);
+                }
+                else
+                {
+                    var result = Dialog.FileSave(".owbproj");
+                    if (result.IsOk)
+                    {
+                        File.WriteAllText(result.Path, projData);
+                        _projectPath = result.Path;
+
+                        if (!_config.recentProjects.Contains(result.Path))
+                        {
+                            _config.recentProjects.Add(result.Path);
+                        }
+                    }
+                }
+            });
+
+            AddMenuItem("File/Save Project As", () => {
+                // todo: save currently open level if necessary
+
+                string projData = JsonConvert.SerializeObject(_project);
+
+                var result = Dialog.FileSave(".owbproj");
+                if (result.IsOk)
+                {
+                    File.WriteAllText(result.Path, projData);
+                    _projectPath = result.Path;
+
+                    if (!_config.recentProjects.Contains(result.Path))
+                    {
+                        _config.recentProjects.Add(result.Path);
+                    }
+                }
+            });
 
             AddMenuItem("Nodes/New Node", () => {
                 Node node = new Node();
@@ -98,8 +201,42 @@ namespace OpenWorldBuilder
             });
 
             AddMenuItem("Nodes/Lights/New Point Light", () => {
-                LightNode node = new LightNode();
-                node.name = "Point Light";
+                LightNode node = new LightNode
+                {
+                    name = "Point Light"
+                };
+                if (activeNode != null)
+                {
+                    activeNode.AddChild(node);
+                }
+                else
+                {
+                    _level.root.AddChild(node);
+                }
+            });
+
+            AddMenuItem("Nodes/Lights/New Directional Light", () => {
+                LightNode node = new LightNode
+                {
+                    name = "Directional Light",
+                    lightType = LightType.Directional
+                };
+                if (activeNode != null)
+                {
+                    activeNode.AddChild(node);
+                }
+                else
+                {
+                    _level.root.AddChild(node);
+                }
+            });
+
+            AddMenuItem("Nodes/Lights/New Spot Light", () => {
+                LightNode node = new LightNode
+                {
+                    name = "Spot Light",
+                    lightType = LightType.Spot
+                };
                 if (activeNode != null)
                 {
                     activeNode.AddChild(node);
@@ -134,18 +271,6 @@ namespace OpenWorldBuilder
             {
                 GetWindow<SceneWindow>();
             });
-
-            if (File.Exists(_configPath))
-            {
-                var configJson = File.ReadAllText(_configPath);
-                _config = JsonConvert.DeserializeObject<UserConfig>(configJson) ?? new UserConfig();
-
-                Console.WriteLine("User config loaded");
-            }
-            else
-            {
-                _config = new UserConfig();
-            }
 
             // try to restore editor layout
             foreach (var win in _config.openWindows)
@@ -188,7 +313,7 @@ namespace OpenWorldBuilder
                     
                     try
                     {
-                        OnContentFolderChanged?.Invoke(new DirectoryInfo(_project.contentPath));
+                        OnContentFolderChanged?.Invoke(new DirectoryInfo(ContentPath));
                     }
                     catch {}
                 }
@@ -283,10 +408,8 @@ namespace OpenWorldBuilder
             return null;
         }
 
-        public void SetContentPath(string newPath)
+        public void UpdateContent()
         {
-            _project.contentPath = newPath;
-
             try
             {
                 if (_contentWatcher != null)
@@ -295,7 +418,7 @@ namespace OpenWorldBuilder
                     _contentWatcher.Dispose();
                 }
 
-                _contentWatcher = new FileSystemWatcher(newPath)
+                _contentWatcher = new FileSystemWatcher(ContentPath)
                 {
                     NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName,
                     IncludeSubdirectories = true
@@ -324,9 +447,15 @@ namespace OpenWorldBuilder
 
                 _contentWatcher.EnableRaisingEvents = true;
 
-                OnContentFolderChanged?.Invoke(new DirectoryInfo(newPath));
+                OnContentFolderChanged?.Invoke(new DirectoryInfo(ContentPath));
             }
             catch {}
+        }
+
+        public void SetContentPath(string newPath)
+        {
+            _project.contentPath = newPath;
+            UpdateContent();
         }
 
         protected void DrawUI(GameTime time)

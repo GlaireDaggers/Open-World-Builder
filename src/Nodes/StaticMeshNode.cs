@@ -29,6 +29,15 @@ namespace OpenWorldBuilder
             _fx.DirectionalLight0.Enabled = true;
         }
 
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            _ib?.Dispose();
+            _vb?.Dispose();
+            _fx.Dispose();
+        }
+
         public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
         {
             base.Draw(view, projection, viewport);
@@ -58,7 +67,7 @@ namespace OpenWorldBuilder
 
             if (path.EndsWith(".obj"))
             {
-                var fullPath = Path.Combine(App.Instance!.ActiveProject.contentPath, path);
+                var fullPath = Path.Combine(App.Instance!.ContentPath, path);
 
                 using var file = File.Open(fullPath, FileMode.Open);
                 ObjUtil.ConvertObj(file, App.Instance!.GraphicsDevice, out _vb, out _ib);

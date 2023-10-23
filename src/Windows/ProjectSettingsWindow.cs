@@ -15,15 +15,31 @@ namespace OpenWorldBuilder
         {
             base.OnDraw(time);
 
-            ImGui.InputText("Content Path", ref App.Instance!.ActiveProject.contentPath, 1024);
+            if (App.Instance!.ProjectPath == null)
+            {
+                ImGui.BeginDisabled();
+            }
+
+            if (ImGui.InputText("Content Path", ref App.Instance!.ActiveProject.contentPath, 1024, ImGuiInputTextFlags.EnterReturnsTrue))
+            {
+                App.Instance!.SetContentPath(App.Instance!.ActiveProject.contentPath);
+            }
+            
             ImGui.SameLine();
+            
             if (ImGui.Button("Browse"))
             {
                 var result = Dialog.FolderPicker(App.Instance!.ActiveProject.contentPath);
                 if (result.IsOk)
                 {
-                    App.Instance!.SetContentPath(result.Path);
+                    string relPath = Path.GetRelativePath(App.Instance!.ProjectFolder!, result.Path);
+                    App.Instance!.SetContentPath(relPath);
                 }
+            }
+
+            if (App.Instance!.ProjectPath == null)
+            {
+                ImGui.EndDisabled();
             }
         }
     }
