@@ -97,6 +97,19 @@ namespace OpenWorldBuilder
                 }
             });
 
+            AddMenuItem("Nodes/Lights/New Point Light", () => {
+                LightNode node = new LightNode();
+                node.name = "Point Light";
+                if (activeNode != null)
+                {
+                    activeNode.AddChild(node);
+                }
+                else
+                {
+                    _level.root.AddChild(node);
+                }
+            });
+
             AddMenuItem("Window/Project Settings", () =>
             {
                 GetWindow<ProjectSettingsWindow>();

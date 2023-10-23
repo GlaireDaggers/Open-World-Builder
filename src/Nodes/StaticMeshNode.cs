@@ -29,9 +29,9 @@ namespace OpenWorldBuilder
             _fx.DirectionalLight0.Enabled = true;
         }
 
-        public override void Draw(Matrix view, Matrix projection)
+        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
         {
-            base.Draw(view, projection);
+            base.Draw(view, projection, viewport);
 
             if (_ib != null && _vb != null)
             {

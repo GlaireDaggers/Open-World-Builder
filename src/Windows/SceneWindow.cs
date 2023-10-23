@@ -37,7 +37,7 @@ namespace OpenWorldBuilder
 
         private void DrawNode(Node node, Matrix view, Matrix proj)
         {
-            node.Draw(view, proj);
+            node.Draw(view, proj, this);
 
             foreach (var child in node.Children)
             {

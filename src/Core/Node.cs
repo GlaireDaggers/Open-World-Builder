@@ -73,7 +73,7 @@ namespace OpenWorldBuilder
             child.Parent = null;
         }
 
-        public virtual void Draw(Matrix view, Matrix projection)
+        public virtual void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
         {
         }
 

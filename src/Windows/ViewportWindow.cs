@@ -373,6 +373,34 @@ namespace OpenWorldBuilder
             }
         }
 
+        public void DrawCircleGizmo(Vector3 center, float radius, Quaternion rotation, Color color)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                int i2 = (i + 1) % 64;
+                float angle1 = (i / 64f) * 360f;
+                float angle2 = (i2 / 64f) * 360f;
+
+                Quaternion r1 = rotation * Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(angle1));
+                Quaternion r2 = rotation * Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(angle2));
+
+                Matrix m1 = Matrix.CreateFromQuaternion(r1);
+                Matrix m2 = Matrix.CreateFromQuaternion(r2);
+
+                Vector3 v1 = Vector3.TransformNormal(Vector3.UnitX, m1) * radius;
+                Vector3 v2 = Vector3.TransformNormal(Vector3.UnitX, m2) * radius;
+
+                DrawLineGizmo(v1 + center, v2 + center, color, color);
+            }
+        }
+
+        public void DrawSphereGizmo(Vector3 center, float radius, Color color)
+        {
+            DrawCircleGizmo(center, radius, Quaternion.Identity, color);
+            DrawCircleGizmo(center, radius, Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(90f)), color);
+            DrawCircleGizmo(center, radius, Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathHelper.ToRadians(90f)), color);
+        }
+
         public void DrawGridGizmo()
         {
             Vector3 quantizedCameraPos = camera.pos;
