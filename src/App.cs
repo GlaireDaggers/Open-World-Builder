@@ -13,6 +13,7 @@ using SDL2;
 namespace OpenWorldBuilder
 {
     public delegate void ContentFolderChangedHandler(DirectoryInfo directory);
+    public delegate void LevelFolderChangedHandler(DirectoryInfo directory);
 
     public class App : Game
     {
@@ -31,6 +32,7 @@ namespace OpenWorldBuilder
         public string ContentPath => ProjectFolder == null ? _project.contentPath : Path.Combine(ProjectFolder, _project.contentPath);
 
         public event ContentFolderChangedHandler OnContentFolderChanged;
+        public event LevelFolderChangedHandler OnLevelFolderChanged;
         
         public Node? activeNode;
 
@@ -58,7 +60,9 @@ namespace OpenWorldBuilder
         private string? _projectPath = null;
 
         private FileSystemWatcher? _contentWatcher;
+        private FileSystemWatcher? _levelWatcher;
         private bool _queueUpdateContent = false;
+        private bool _queueUpdateLevels = false;
 
         public App()
         {
@@ -122,6 +126,7 @@ namespace OpenWorldBuilder
                             _config.recentProjects.Add(result.Path);
                         }
                         UpdateContent();
+                        UpdateLevelFolder();
                     }
                     catch {}
                 }
@@ -140,6 +145,7 @@ namespace OpenWorldBuilder
                         _level = new Level();
                         _projectPath = projpath;
                         UpdateContent();
+                        UpdateLevelFolder();
                     }
                     catch {}
                 });
@@ -166,6 +172,8 @@ namespace OpenWorldBuilder
                         {
                             _config.recentProjects.Add(result.Path);
                         }
+
+                        UpdateLevelFolder();
                     }
                 }
             });
@@ -185,7 +193,19 @@ namespace OpenWorldBuilder
                     {
                         _config.recentProjects.Add(result.Path);
                     }
+
+                    UpdateLevelFolder();
                 }
+            });
+
+            AddMenuItem("File/Save Level", () => {
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                };
+                string levelData = JsonConvert.SerializeObject(_level, settings);
+                Directory.CreateDirectory(Path.Combine(ProjectFolder!, "levels"));
+                File.WriteAllText(Path.Combine(ProjectFolder!, $"levels/{_level.root.name}.owblevel"), levelData);
             });
 
             AddMenuItem("Nodes/New Node", () => {
@@ -282,8 +302,6 @@ namespace OpenWorldBuilder
                 catch {}
             }
 
-            _level.root.AddChild(new Node());
-
             base.Initialize();
         }
 
@@ -314,6 +332,17 @@ namespace OpenWorldBuilder
                     try
                     {
                         OnContentFolderChanged?.Invoke(new DirectoryInfo(ContentPath));
+                    }
+                    catch {}
+                }
+
+                if (_queueUpdateLevels)
+                {
+                    _queueUpdateLevels = false;
+
+                    try
+                    {
+                        OnLevelFolderChanged?.Invoke(new DirectoryInfo(Path.Combine(ProjectFolder!, "levels")));
                     }
                     catch {}
                 }
@@ -406,6 +435,59 @@ namespace OpenWorldBuilder
 
             Console.WriteLine("No node factories for asset: " + assetPath);
             return null;
+        }
+
+        public void ChangeLevel(Level level)
+        {
+            _level.Dispose();
+            _level = level;
+            level.root.OnLoad();
+        }
+
+        public void UpdateLevelFolder()
+        {
+            string levelFolder = Path.Combine(ProjectFolder!, "levels");
+            Directory.CreateDirectory(levelFolder);
+
+            try
+            {
+                if (_levelWatcher != null)
+                {
+                    _levelWatcher.EnableRaisingEvents = false;
+                    _levelWatcher.Dispose();
+                }
+
+                _levelWatcher = new FileSystemWatcher(levelFolder)
+                {
+                    NotifyFilter = NotifyFilters.FileName
+                };
+
+                _levelWatcher.Created += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateLevels = true;
+                    }
+                };
+
+                _levelWatcher.Deleted += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateLevels = true;
+                    }
+                };
+
+                _levelWatcher.Renamed += (sender, e) => {
+                    lock (this)
+                    {
+                        _queueUpdateLevels = true;
+                    }
+                };
+
+                _levelWatcher.EnableRaisingEvents = true;
+
+                OnLevelFolderChanged?.Invoke(new DirectoryInfo(levelFolder));
+            }
+            catch {}
         }
 
         public void UpdateContent()

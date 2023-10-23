@@ -2,11 +2,14 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NativeFileDialogSharp;
+using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
+    [JsonObject(MemberSerialization.OptIn)]
     public class StaticMeshNode : Node
     {
+        [JsonProperty]
         public string meshPath = "";
 
         private IndexBuffer? _ib;
@@ -27,6 +30,17 @@ namespace OpenWorldBuilder
             _fx.DirectionalLight0.Direction = new Vector3(-1f, -1f, -1f);
             _fx.DirectionalLight0.SpecularColor = new Vector3(0f, 0f, 0f);
             _fx.DirectionalLight0.Enabled = true;
+        }
+
+        public override void OnLoad()
+        {
+            base.OnLoad();
+            
+            try
+            {
+                LoadMesh(meshPath);
+            }
+            catch {}
         }
 
         public override void Dispose()
@@ -79,6 +93,8 @@ namespace OpenWorldBuilder
         public override void DrawInspector()
         {
             base.DrawInspector();
+
+            ImGui.Spacing();
 
             if (ImGui.InputText("Mesh", ref meshPath, 1024, ImGuiInputTextFlags.EnterReturnsTrue))
             {

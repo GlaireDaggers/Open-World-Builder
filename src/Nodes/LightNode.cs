@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
@@ -11,6 +12,7 @@ namespace OpenWorldBuilder
         Spot
     }
 
+    [JsonObject(MemberSerialization.OptIn)]
     public class LightNode : Node
     {
         private static string[] lightTypeNames = new string[]
@@ -20,16 +22,29 @@ namespace OpenWorldBuilder
             "Spot"
         };
 
+        [JsonProperty]
         public LightType lightType = LightType.Point;
+
+        [JsonProperty]
         public Color color = Color.White;
+
+        [JsonProperty]
         public float intensity = 1f;
+
+        [JsonProperty]
         public float radius = 10f;
+
+        [JsonProperty]
         public float innerConeAngle = 0f;
+
+        [JsonProperty]
         public float outerConeAngle = 45f;
 
         public override void DrawInspector()
         {
             base.DrawInspector();
+
+            ImGui.Spacing();
 
             int lightTypeIdx = (int)lightType;
             if (ImGui.Combo("Light Type", ref lightTypeIdx, lightTypeNames, 3))

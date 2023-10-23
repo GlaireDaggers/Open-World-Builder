@@ -3,17 +3,26 @@ using System.Diagnostics;
 using ImGuiNET;
 using ImGuizmoNET;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
     /// <summary>
     /// Base class for a node in a scene hierarchy
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public class Node : IDisposable
     {
+        [JsonProperty]
         public string name = "Node";
+
+        [JsonProperty]
         public Vector3 position = Vector3.Zero;
+
+        [JsonProperty]
         public Quaternion rotation = Quaternion.Identity;
+
+        [JsonProperty]
         public Vector3 scale = Vector3.One;
 
         public Matrix World
@@ -55,7 +64,16 @@ namespace OpenWorldBuilder
         /// </summary>
         public ReadOnlyCollection<Node> Children => _children.AsReadOnly();
 
+        [JsonProperty(propertyName: "children")]
         private List<Node> _children = new List<Node>();
+
+        public virtual void OnLoad()
+        {
+            foreach (var child in _children)
+            {
+                child.OnLoad();
+            }
+        }
 
         public virtual void Dispose()
         {
