@@ -65,7 +65,6 @@ namespace OpenWorldBuilder
         /// </summary>
         public ReadOnlyCollection<Node> Children => _children.AsReadOnly();
 
-        [JsonProperty(propertyName: "children")]
         private List<Node> _children = new List<Node>();
 
         public virtual void OnLoad()

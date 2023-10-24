@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.AccessControl;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -11,26 +12,57 @@ namespace OpenWorldBuilder
         public override Node? ReadJson(JsonReader reader, Type objectType, Node? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             JObject jObj = JObject.Load(reader);
-            Type targetType = GetNodeType(objectType, jObj);
-            
-            object target = Activator.CreateInstance(targetType)!;
-            serializer.Populate(jObj.CreateReader(), target);
-
-            return (Node)target;
+            return DeserializeNode(objectType, serializer, jObj);
         }
 
         public override void WriteJson(JsonWriter writer, Node? value, JsonSerializer serializer)
         {
-            JObject jObj = new JObject();
-            var objWriter = jObj.CreateWriter();
-            serializer.Serialize(objWriter, value);
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
+            JObject jObj = SerializeNode(value);
+            jObj.WriteTo(writer);
+        }
+
+        private Node DeserializeNode(Type objectType, JsonSerializer serializer, JObject jObj)
+        {
+            Type targetType = GetNodeType(objectType, jObj);
             
-            if (value != null && value.GetType().GetCustomAttribute<SerializedNodeAttribute>() is SerializedNodeAttribute attr)
+            Node target = (Node)Activator.CreateInstance(targetType)!;
+            serializer.Populate(jObj.CreateReader(), target);
+
+            var childArr = (JArray)jObj.Property("children")!.Value;
+            foreach (var childTok in childArr)
+            {
+                var childNode = DeserializeNode(typeof(Node), serializer, (JObject)childTok);
+                target.AddChild(childNode);
+            }
+
+            return target;
+        }
+
+        private JObject SerializeNode(Node node)
+        {
+            JToken t = JToken.FromObject(node);
+            JObject jObj = (JObject)t;
+            
+            if (node.GetType().GetCustomAttribute<SerializedNodeAttribute>() is SerializedNodeAttribute attr)
             {
                 jObj.Add("type", (JToken)attr.typeName);
             }
 
-            jObj.WriteTo(writer);
+            var childArr = new JArray();
+
+            foreach (var childNode in node.Children)
+            {
+                childArr.Add(SerializeNode(childNode));
+            }
+
+            jObj.Add("children", childArr);
+            return jObj;
         }
 
         private Type GetNodeType(Type objType, JObject jObject)
