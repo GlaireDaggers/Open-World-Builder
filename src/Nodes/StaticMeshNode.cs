@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 namespace OpenWorldBuilder
 {
     [JsonObject(MemberSerialization.OptIn)]
+    [SerializedNode("StaticMeshNode")]
     public class StaticMeshNode : Node
     {
         [JsonProperty]
@@ -35,7 +36,7 @@ namespace OpenWorldBuilder
         public override void OnLoad()
         {
             base.OnLoad();
-            
+
             try
             {
                 LoadMesh(meshPath);

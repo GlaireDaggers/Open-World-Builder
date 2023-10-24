@@ -199,10 +199,9 @@ namespace OpenWorldBuilder
             });
 
             AddMenuItem("File/Save Level", () => {
-                JsonSerializerSettings settings = new JsonSerializerSettings
-                {
-                    TypeNameHandling = TypeNameHandling.Auto
-                };
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.Converters.Add(new JsonNodeConverter());
+                
                 string levelData = JsonConvert.SerializeObject(_level, settings);
                 Directory.CreateDirectory(Path.Combine(ProjectFolder!, "levels"));
                 File.WriteAllText(Path.Combine(ProjectFolder!, $"levels/{_level.root.name}.owblevel"), levelData);

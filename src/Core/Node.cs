@@ -11,6 +11,7 @@ namespace OpenWorldBuilder
     /// Base class for a node in a scene hierarchy
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
+    [SerializedNode("Node")]
     public class Node : IDisposable
     {
         [JsonProperty]
@@ -196,6 +197,7 @@ namespace OpenWorldBuilder
     /// <summary>
     /// Base class for the root node containing the entire level
     /// </summary>
+    [SerializedNode("SceneRootNode")]
     public class SceneRootNode : Node
     {
         public override void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)

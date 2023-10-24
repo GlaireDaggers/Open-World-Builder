@@ -13,6 +13,7 @@ namespace OpenWorldBuilder
     }
 
     [JsonObject(MemberSerialization.OptIn)]
+    [SerializedNode("LightNode")]
     public class LightNode : Node
     {
         private static string[] lightTypeNames = new string[]
