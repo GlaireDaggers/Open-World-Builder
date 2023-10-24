@@ -13,25 +13,7 @@ namespace OpenWorldBuilder
         [JsonProperty]
         public string meshPath = "";
 
-        private IndexBuffer? _ib;
-        private VertexBuffer? _vb;
-        private BasicEffect _fx;
-
-        public StaticMeshNode()
-        {
-            _fx = new BasicEffect(App.Instance!.GraphicsDevice)
-            {
-                TextureEnabled = false,
-                VertexColorEnabled = true,
-                LightingEnabled = true,
-                AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f)
-            };
-
-            _fx.DirectionalLight0.DiffuseColor = new Vector3(1f, 1f, 1f);
-            _fx.DirectionalLight0.Direction = new Vector3(-1f, -1f, -1f);
-            _fx.DirectionalLight0.SpecularColor = new Vector3(0f, 0f, 0f);
-            _fx.DirectionalLight0.Enabled = true;
-        }
+        private GltfModel? _model;
 
         public override void OnLoad()
         {
@@ -48,44 +30,106 @@ namespace OpenWorldBuilder
         {
             base.Dispose();
 
-            _ib?.Dispose();
-            _vb?.Dispose();
-            _fx.Dispose();
+            _model?.Dispose();
+            _model = null;
         }
 
         public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
         {
             base.Draw(view, projection, viewport);
 
-            if (_ib != null && _vb != null)
+            if (_model != null)
             {
-                _fx.World = World;
-                _fx.View = view;
-                _fx.Projection = projection;
+                var transform = World;
 
-                App.Instance!.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-                App.Instance!.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-                App.Instance!.GraphicsDevice.SetVertexBuffer(_vb);
-                App.Instance!.GraphicsDevice.Indices = _ib;
-                _fx.CurrentTechnique.Passes[0].Apply();
-                App.Instance!.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _vb.VertexCount, 0, _ib.IndexCount / 3);
+                foreach (var mat in _model.materials)
+                {
+                    mat.View = view;
+                    mat.Projection = projection;
+
+                    mat.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
+                    mat.DirectionalLight0.DiffuseColor = new Vector3(1f, 1f, 1f);
+                    mat.DirectionalLight0.Direction = new Vector3(-1f, -1f, -1f);
+                    mat.DirectionalLight0.SpecularColor = new Vector3(0f, 0f, 0f);
+                    mat.DirectionalLight0.Enabled = true;
+                }
+                
+                foreach (var node in _model.nodes)
+                {
+                    var mesh = _model.meshes[node.meshIdx];
+                    var nodeTransform = node.transform * transform;
+
+                    foreach (var mat in _model.materials)
+                    {
+                        mat.World = nodeTransform;
+                    }
+
+                    App.Instance!.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                    App.Instance!.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+
+                    foreach (var meshpart in mesh.meshParts)
+                    {
+                        App.Instance!.GraphicsDevice.SetVertexBuffer(meshpart.vb);
+                        App.Instance!.GraphicsDevice.Indices = meshpart.ib;
+                        _model.materials[meshpart.materialIdx].CurrentTechnique.Passes[0].Apply();
+                        App.Instance!.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshpart.vb.VertexCount, 0, meshpart.ib.IndexCount / 3);
+                    }
+                }
             }
         }
 
         public void LoadMesh(string path)
         {
-            _ib?.Dispose();
-            _vb?.Dispose();
-
-            _ib = null;
-            _vb = null;
+            _model?.Dispose();
+            _model = null;
+            
+            var fullPath = Path.Combine(App.Instance!.ContentPath, path);
 
             if (path.EndsWith(".obj"))
             {
-                var fullPath = Path.Combine(App.Instance!.ContentPath, path);
-
                 using var file = File.Open(fullPath, FileMode.Open);
-                ObjUtil.ConvertObj(file, App.Instance!.GraphicsDevice, out _vb, out _ib);
+
+                ObjUtil.ConvertObj(file, App.Instance!.GraphicsDevice, out var vb, out var ib);
+
+                _model = new GltfModel
+                {
+                    materials = new List<BasicEffect>()
+                    {
+                        new BasicEffect(App.Instance!.GraphicsDevice)
+                        {
+                            TextureEnabled = false,
+                            VertexColorEnabled = true,
+                            LightingEnabled = true,
+                        }
+                    },
+                    meshes = new List<GltfMesh>()
+                    {
+                        new GltfMesh
+                        {
+                            meshParts = new List<GltfMeshPart>()
+                            {
+                                new GltfMeshPart
+                                {
+                                    materialIdx = 0,
+                                    ib = ib,
+                                    vb = vb,
+                                }
+                            }
+                        }
+                    },
+                    nodes = new List<GltfModel.ModelNode>()
+                    {
+                        new GltfModel.ModelNode
+                        {
+                            meshIdx = 0,
+                            transform = Matrix.Identity
+                        }
+                    },
+                };
+            }
+            else if (path.EndsWith(".gltf") || path.EndsWith(".glb"))
+            {
+                _model = GltfUtil.ConvertGltf(fullPath, App.Instance!.GraphicsDevice);
             }
 
             meshPath = path;

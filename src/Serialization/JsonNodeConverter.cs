@@ -104,7 +104,14 @@ namespace OpenWorldBuilder
             {
                 if (typeof(Node).IsAssignableFrom(t) && t.GetCustomAttribute<SerializedNodeAttribute>() is SerializedNodeAttribute attr)
                 {
-                    typeCache!.Add(attr.typeName, t);
+                    if (typeCache!.ContainsKey(attr.typeName))
+                    {
+                        Console.WriteLine($"WARNING: Type {t.Name} tried to add type name {attr.typeName} to type cache but already exists in the cache");
+                    }
+                    else
+                    {
+                        typeCache!.Add(attr.typeName, t);
+                    }
                 }
             }
         }

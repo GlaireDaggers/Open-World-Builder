@@ -4,7 +4,7 @@ namespace OpenWorldBuilder
     {
         public override bool CanHandle(string assetPath)
         {
-            return assetPath.EndsWith(".obj");
+            return assetPath.EndsWith(".obj") || assetPath.EndsWith(".glb") || assetPath.EndsWith(".gltf");
         }
 
         public override Node Process(string assetPath)
