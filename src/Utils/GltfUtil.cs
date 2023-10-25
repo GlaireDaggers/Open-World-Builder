@@ -7,7 +7,6 @@ namespace OpenWorldBuilder
 {
     public struct GltfMeshPart : IDisposable
     {
-        public Matrix transform;
         public int materialIdx;
         public VertexBuffer vb;
         public IndexBuffer ib;
@@ -41,7 +40,7 @@ namespace OpenWorldBuilder
         }
 
         public List<Texture2D> textures = new List<Texture2D>();
-        public List<BasicEffect> materials = new List<BasicEffect>();
+        public List<RenderMaterial> materials = new List<RenderMaterial>();
         public List<GltfMesh> meshes = new List<GltfMesh>();
         public List<ModelNode> nodes = new List<ModelNode>();
 
@@ -50,11 +49,6 @@ namespace OpenWorldBuilder
             foreach (var tex in textures)
             {
                 tex.Dispose();
-            }
-
-            foreach (var material in materials)
-            {
-                material.Dispose();
             }
 
             foreach (var mesh in meshes)
@@ -73,14 +67,16 @@ namespace OpenWorldBuilder
         private static VertexDeclaration MeshVertDeclaration = new VertexDeclaration(
             new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
             new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-            new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
-            new VertexElement(32, VertexElementFormat.Color, VertexElementUsage.Color, 0)
+            new VertexElement(24, VertexElementFormat.Vector4, VertexElementUsage.Tangent, 0),
+            new VertexElement(40, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(48, VertexElementFormat.Color, VertexElementUsage.Color, 0)
         );
 
         private struct MeshVert
         {
             public Vector3 pos;
             public Vector3 normal;
+            public Vector4 tangent;
             public Vector2 uv;
             public Color col;
         }
@@ -90,14 +86,21 @@ namespace OpenWorldBuilder
             var model = ModelRoot.Load(path);
 
             List<Texture2D> textures = new List<Texture2D>();
-            List<BasicEffect> materials = new List<BasicEffect>();
+            List<RenderMaterial> materials = new List<RenderMaterial>();
 
             foreach (var mat in model.LogicalMaterials)
             {
-                var fx = new BasicEffect(gd);
-                fx.TextureEnabled = false;
-                fx.VertexColorEnabled = true;
-                fx.LightingEnabled = true;
+                var material = new RenderMaterial
+                {
+                    alphaCutoff = mat.AlphaCutoff
+                };
+
+                switch (mat.Alpha)
+                {
+                    case AlphaMode.OPAQUE: material.alphaMode = RenderMaterialAlphaMode.Opaque; break;
+                    case AlphaMode.MASK: material.alphaMode = RenderMaterialAlphaMode.Mask; break;
+                    case AlphaMode.BLEND: material.alphaMode = RenderMaterialAlphaMode.Blend; break;
+                }
 
                 if (mat.FindChannel("BaseColor") is MaterialChannel baseColor)
                 {
@@ -106,15 +109,38 @@ namespace OpenWorldBuilder
                         var tex = Texture2D.FromStream(gd, baseColor.Texture.PrimaryImage.Content.Open());
                         textures.Add(tex);
 
-                        textures.Add(tex);
-                        fx.Texture = tex;
-                        fx.TextureEnabled = true;
+                        material.albedoTexture = tex;
                     }
 
-                    fx.DiffuseColor = new Vector3(baseColor.Color.X, baseColor.Color.Y, baseColor.Color.Z);
+                    material.albedo = new Color(baseColor.Color.X, baseColor.Color.Y, baseColor.Color.Z, baseColor.Color.W);
                 }
 
-                materials.Add(fx);
+                if (mat.FindChannel("Normal") is MaterialChannel normal)
+                {
+                    if (normal.Texture != null)
+                    {
+                        var tex = Texture2D.FromStream(gd, normal.Texture.PrimaryImage.Content.Open());
+                        textures.Add(tex);
+
+                        material.normalTexture = tex;
+                    }
+                }
+
+                if (mat.FindChannel("MetallicRoughness") is MaterialChannel mr)
+                {
+                    if (mr.Texture != null)
+                    {
+                        var tex = Texture2D.FromStream(gd, mr.Texture.PrimaryImage.Content.Open());
+                        textures.Add(tex);
+
+                        material.ormTexture = tex;
+                    }
+
+                    material.metallic = mr.GetFactor("MetallicFactor");
+                    material.roughness = mr.GetFactor("RoughnessFactor");
+                }
+
+                materials.Add(material);
             }
 
             List<GltfMesh> meshes = new List<GltfMesh>();
@@ -125,6 +151,7 @@ namespace OpenWorldBuilder
                 {
                     var vpos = prim.GetVertexAccessor("POSITION")?.AsVector3Array()!;
                     var vnorm = prim.GetVertexAccessor("NORMAL")?.AsVector3Array();
+                    var vtan = prim.GetVertexAccessor("TANGENT")?.AsVector4Array();
                     var vcolor = prim.GetVertexAccessor("COLOR_0")?.AsVector4Array();
                     var vtex = prim.GetVertexAccessor("TEXCOORD_0")?.AsVector2Array();
                     var tris = prim.GetTriangleIndices().ToArray();
@@ -141,6 +168,7 @@ namespace OpenWorldBuilder
                         };
 
                         if (vnorm != null) v.normal = new Vector3(vnorm[i].X, vnorm[i].Y, vnorm[i].Z);
+                        if (vtan != null) v.tangent = new Vector4(vtan[i].X, vtan[i].Y, vtan[i].Z, vtan[i].W);
                         if (vcolor != null) v.col = new Color(vcolor[i].X, vcolor[i].Y, vcolor[i].Z, vcolor[i].W);
                         if (vtex != null) v.uv = new Vector2(vtex[i].X, vtex[i].Y);
 

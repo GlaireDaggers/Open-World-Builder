@@ -6,6 +6,7 @@ namespace OpenWorldBuilder
     public class SceneWindow : ViewportWindow
     {
         private bool _localSpace = false;
+        private RenderSystem _renderSystem = new BasicForwardRenderSystem();
 
         public SceneWindow() : base()
         {
@@ -15,6 +16,7 @@ namespace OpenWorldBuilder
         protected override void DrawViewport(Matrix view, Matrix proj)
         {
             base.DrawViewport(view, proj);
+            _renderSystem.Draw(App.Instance!.ActiveLevel.root, view, proj);
             DrawNode(App.Instance!.ActiveLevel.root, view, proj);
         }
 

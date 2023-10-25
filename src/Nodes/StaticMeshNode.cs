@@ -12,6 +12,8 @@ namespace OpenWorldBuilder
     {
         [JsonProperty]
         public string meshPath = "";
+        
+        public GltfModel? Model => _model;
 
         private GltfModel? _model;
 
@@ -36,7 +38,14 @@ namespace OpenWorldBuilder
 
         public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
         {
-            base.Draw(view, projection, viewport);
+            /*base.Draw(view, projection, viewport);
+
+            var vp = view * projection;
+
+            _directionalLightFwd[0] = new Vector3(1f, -1f, 1f);
+            _directionalLightFwd[0].Normalize();
+
+            _directionalLightColor[0] = new Vector3(1f, 1f, 1f);
 
             if (_model != null)
             {
@@ -44,14 +53,11 @@ namespace OpenWorldBuilder
 
                 foreach (var mat in _model.materials)
                 {
-                    mat.View = view;
-                    mat.Projection = projection;
+                    mat.Parameters["ViewProjection"].SetValue(vp);
+                    mat.Parameters["DirectionalLightCount"].SetValue(1);
 
-                    mat.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
-                    mat.DirectionalLight0.DiffuseColor = new Vector3(1f, 1f, 1f);
-                    mat.DirectionalLight0.Direction = new Vector3(-1f, -1f, -1f);
-                    mat.DirectionalLight0.SpecularColor = new Vector3(0f, 0f, 0f);
-                    mat.DirectionalLight0.Enabled = true;
+                    mat.Parameters["DirectionalLightFwd"].SetValue(_directionalLightFwd);
+                    mat.Parameters["DirectionalLightCol"].SetValue(_directionalLightColor);
                 }
                 
                 foreach (var node in _model.nodes)
@@ -61,7 +67,7 @@ namespace OpenWorldBuilder
 
                     foreach (var mat in _model.materials)
                     {
-                        mat.World = nodeTransform;
+                        mat.Parameters["World"].SetValue(nodeTransform);
                     }
 
                     App.Instance!.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -75,7 +81,7 @@ namespace OpenWorldBuilder
                         App.Instance!.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshpart.vb.VertexCount, 0, meshpart.ib.IndexCount / 3);
                     }
                 }
-            }
+            }*/
         }
 
         public void LoadMesh(string path)
@@ -93,13 +99,13 @@ namespace OpenWorldBuilder
 
                 _model = new GltfModel
                 {
-                    materials = new List<BasicEffect>()
+                    materials = new List<RenderMaterial>()
                     {
-                        new BasicEffect(App.Instance!.GraphicsDevice)
+                        new RenderMaterial
                         {
-                            TextureEnabled = false,
-                            VertexColorEnabled = true,
-                            LightingEnabled = true,
+                            albedo = new Color(1f, 1f, 1f),
+                            roughness = 1f,
+                            metallic = 0f,
                         }
                     },
                     meshes = new List<GltfMesh>()

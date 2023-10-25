@@ -1,0 +1,1 @@
+wine ../deps/efb/efb.exe BasicLit.fx ../src/content/shader/BasicLit.fxo

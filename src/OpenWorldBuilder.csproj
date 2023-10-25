@@ -26,6 +26,12 @@
 		<ProjectReference Include="..\deps\ImGui.NET\src\ImPlot.NET\ImPlot.NET.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="content/**/*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<Content Include="../deps/fnalibs/x64/FAudio.dll">
 			<Link>%(Filename)%(Extension)</Link>
