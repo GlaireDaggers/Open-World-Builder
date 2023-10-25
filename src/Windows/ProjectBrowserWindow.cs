@@ -101,15 +101,30 @@ namespace OpenWorldBuilder
 
             foreach (var file in folder.files)
             {
+                bool hasNodeFactory = App.Instance!.HasNodeFactory(file.path);
+
+                if (!hasNodeFactory)
+                {
+                    ImGui.BeginDisabled();
+                }
+
                 if (ImGui.TreeNodeEx(file.name, ImGuiTreeNodeFlags.Leaf))
                 {
-                    if (ImGui.BeginDragDropSource())
+                    if (hasNodeFactory)
                     {
-                        App.dragPayload = file.path;
-                        ImGui.SetDragDropPayload("ASSET", 0, 0);
-                        ImGui.EndDragDropSource();
+                        if (ImGui.BeginDragDropSource())
+                        {
+                            App.dragPayload = file.path;
+                            ImGui.SetDragDropPayload("ASSET", 0, 0);
+                            ImGui.EndDragDropSource();
+                        }
                     }
                     ImGui.TreePop();
+                }
+
+                if (!hasNodeFactory)
+                {
+                    ImGui.EndDisabled();
                 }
             }
         }

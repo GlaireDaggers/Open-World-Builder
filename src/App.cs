@@ -418,6 +418,19 @@ namespace OpenWorldBuilder
             _nodeFactories.Add(nodeFactory);
         }
 
+        public bool HasNodeFactory(string assetPath)
+        {
+            foreach (var factory in _nodeFactories)
+            {
+                if (factory.CanHandle(assetPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public Node? TryCreateNode(string assetPath)
         {
             foreach (var factory in _nodeFactories)

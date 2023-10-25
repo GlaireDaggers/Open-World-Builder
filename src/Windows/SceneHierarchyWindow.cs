@@ -1,5 +1,6 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace OpenWorldBuilder
 {
@@ -39,6 +40,22 @@ namespace OpenWorldBuilder
             else if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered())
             {
                 App.Instance!.activeNode = null;
+            }
+
+            if (App.Instance.activeNode != null)
+            {
+                if (ImGui.IsWindowFocused() && App.Instance!.curKeyboardState.IsKeyDown(Keys.Delete) && App.Instance!.prevKeyboardState.IsKeyUp(Keys.Delete))
+                {
+                    var node = App.Instance.activeNode;
+
+                    if (node.Parent != null)
+                    {
+                        node.Parent.RemoveChild(node);
+                        node.Dispose();
+                    }
+                    
+                    App.Instance!.activeNode = null;
+                }
             }
         }
 
