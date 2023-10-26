@@ -220,6 +220,21 @@ namespace OpenWorldBuilder
                 }
             });
 
+            AddMenuItem("Nodes/New Spline", () => {
+                SplineNode node = new SplineNode
+                {
+                    name = "Spline"
+                };
+                if (activeNode != null)
+                {
+                    activeNode.AddChild(node);
+                }
+                else
+                {
+                    _level.root.AddChild(node);
+                }
+            });
+
             AddMenuItem("Nodes/Lights/New Point Light", () => {
                 LightNode node = new LightNode
                 {

@@ -82,6 +82,8 @@ namespace OpenWorldBuilder
 
         private float _moveSpeed = 10f;
 
+        private int _gizmoId = 0;
+
         public ViewportWindow() : base()
         {
             title = "Viewport Window";
@@ -259,6 +261,7 @@ namespace OpenWorldBuilder
             ImGuizmo.SetRect(winPos.X, winPos.Y, winSize.X, winSize.Y);
 
             // draw handles
+            _gizmoId = 0;
             DrawHandles(_cachedView, _cachedProj);
         }
 
@@ -295,6 +298,8 @@ namespace OpenWorldBuilder
 
         public void PositionHandle(ref Vector3 position, Quaternion rotation, Matrix parentMatrix, bool localSpace = false)
         {
+            ImGuizmo.SetID(_gizmoId++);
+
             Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
             bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.TRANSLATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
@@ -308,6 +313,8 @@ namespace OpenWorldBuilder
 
         public void RotationHandle(ref Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false)
         {
+            ImGuizmo.SetID(_gizmoId++);
+
             Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
             bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.ROTATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
@@ -321,6 +328,8 @@ namespace OpenWorldBuilder
 
         public void ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false)
         {
+            ImGuizmo.SetID(_gizmoId++);
+            
             Matrix transform = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
             bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
