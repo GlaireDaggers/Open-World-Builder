@@ -6,12 +6,25 @@ using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
+    public enum CollisionType
+    {
+        None,
+        Collide,
+        Trigger,
+    }
+
     [JsonObject(MemberSerialization.OptIn)]
     [SerializedNode("StaticMeshNode")]
     public class StaticMeshNode : Node
     {
         [JsonProperty]
         public string meshPath = "";
+
+        [JsonProperty]
+        public bool visible = true;
+
+        [JsonProperty]
+        public CollisionType collision = CollisionType.None;
         
         public GltfModel? Model => _model;
 
@@ -36,52 +49,28 @@ namespace OpenWorldBuilder
             _model = null;
         }
 
-        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
+        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
         {
-            /*base.Draw(view, projection, viewport);
+            base.Draw(view, projection, viewport, selected);
 
-            var vp = view * projection;
-
-            _directionalLightFwd[0] = new Vector3(1f, -1f, 1f);
-            _directionalLightFwd[0].Normalize();
-
-            _directionalLightColor[0] = new Vector3(1f, 1f, 1f);
-
-            if (_model != null)
+            if (collision != CollisionType.None && selected)
             {
-                var transform = World;
-
-                foreach (var mat in _model.materials)
+                if (_model != null)
                 {
-                    mat.Parameters["ViewProjection"].SetValue(vp);
-                    mat.Parameters["DirectionalLightCount"].SetValue(1);
+                    var transform = World;
 
-                    mat.Parameters["DirectionalLightFwd"].SetValue(_directionalLightFwd);
-                    mat.Parameters["DirectionalLightCol"].SetValue(_directionalLightColor);
-                }
-                
-                foreach (var node in _model.nodes)
-                {
-                    var mesh = _model.meshes[node.meshIdx];
-                    var nodeTransform = node.transform * transform;
-
-                    foreach (var mat in _model.materials)
+                    foreach (var node in _model.nodes)
                     {
-                        mat.Parameters["World"].SetValue(nodeTransform);
-                    }
+                        var mesh = _model.meshes[node.meshIdx];
+                        var nodeTransform = node.transform * transform;
 
-                    App.Instance!.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-                    App.Instance!.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-
-                    foreach (var meshpart in mesh.meshParts)
-                    {
-                        App.Instance!.GraphicsDevice.SetVertexBuffer(meshpart.vb);
-                        App.Instance!.GraphicsDevice.Indices = meshpart.ib;
-                        _model.materials[meshpart.materialIdx].CurrentTechnique.Passes[0].Apply();
-                        App.Instance!.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, meshpart.vb.VertexCount, 0, meshpart.ib.IndexCount / 3);
+                        foreach (var meshpart in mesh.meshParts)
+                        {
+                            viewport.DrawWireframeMeshGizmo(nodeTransform, meshpart.ib, meshpart.vb, Color.DarkCyan);
+                        }
                     }
                 }
-            }*/
+            }
         }
 
         public void LoadMesh(string path)
@@ -144,6 +133,14 @@ namespace OpenWorldBuilder
         public override void DrawInspector()
         {
             base.DrawInspector();
+
+            ImGui.Spacing();
+
+            ImGui.Checkbox("Visible", ref visible);
+
+            int col = (int)collision;
+            ImGui.Combo("Collision Type", ref col, "None\0Collide\0Trigger");
+            collision = (CollisionType)col;
 
             ImGui.Spacing();
 

@@ -80,9 +80,9 @@ namespace OpenWorldBuilder
             }
         }
 
-        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport)
+        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
         {
-            base.Draw(view, projection, viewport);
+            base.Draw(view, projection, viewport, selected);
 
             Matrix trs = World;
             trs.Decompose(out _, out var worldRot, out var worldPos);

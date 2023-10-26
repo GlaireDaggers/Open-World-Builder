@@ -81,7 +81,7 @@ namespace OpenWorldBuilder
 
         private void GatherLists(Node node)
         {
-            if (node is StaticMeshNode staticMesh && staticMesh.Model != null)
+            if (node is StaticMeshNode staticMesh && staticMesh.Model != null && staticMesh.visible)
             {
                 var nodeTransform = node.World;
 

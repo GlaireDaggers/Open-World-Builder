@@ -329,7 +329,7 @@ namespace OpenWorldBuilder
         public void ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false)
         {
             ImGuizmo.SetID(_gizmoId++);
-            
+
             Matrix transform = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
             bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
 
@@ -355,6 +355,23 @@ namespace OpenWorldBuilder
             base.Dispose();
             _viewportRT?.Dispose();
             _viewportRT = null;
+        }
+
+        public void DrawWireframeMeshGizmo(Matrix transform, IndexBuffer ib, VertexBuffer vb, Color color)
+        {
+            // draw gizmo buffer
+            _gizmoEffect.View = _cachedView;
+            _gizmoEffect.Projection = _cachedProj;
+            _gizmoEffect.World = transform;
+            _gizmoEffect.DiffuseColor = color.ToVector3();
+
+            _gizmoEffect.CurrentTechnique.Passes[0].Apply();
+            App.Instance!.GraphicsDevice.RasterizerState = _gizmoRS;
+            App.Instance!.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+
+            App.Instance!.GraphicsDevice.SetVertexBuffer(vb);
+            App.Instance!.GraphicsDevice.Indices = ib;
+            App.Instance!.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vb.VertexCount, 0, ib.IndexCount / 3);
         }
 
         public void DrawLineGizmo(Vector3 start, Vector3 end, Color color1, Color color2)
@@ -457,6 +474,7 @@ namespace OpenWorldBuilder
                 _gizmoEffect.View = _cachedView;
                 _gizmoEffect.Projection = _cachedProj;
                 _gizmoEffect.World = Matrix.Identity;
+                _gizmoEffect.DiffuseColor = Vector3.One;
 
                 _gizmoEffect.CurrentTechnique.Passes[0].Apply();
                 App.Instance!.GraphicsDevice.RasterizerState = _gizmoRS;
