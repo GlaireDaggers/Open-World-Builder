@@ -13,9 +13,9 @@ namespace OpenWorldBuilder
         private Vector4[] _pointLightPosRadius = new Vector4[16];
         private Vector3[] _pointLightColor = new Vector3[16];
 
-        private Vector4[] _spotLightPosRadius = new Vector4[16];
-        private Vector4[] _spotLightFwdAngle1 = new Vector4[16];
-        private Vector4[] _spotLightColorAngle2 = new Vector4[16];
+        private Vector4[] _spotLightPosRadius = new Vector4[8];
+        private Vector4[] _spotLightFwdAngle1 = new Vector4[8];
+        private Vector4[] _spotLightColorAngle2 = new Vector4[8];
 
         private List<LightNode> _tmpDirectional = new List<LightNode>();
         private List<LightNode> _tmpPointLights = new List<LightNode>();

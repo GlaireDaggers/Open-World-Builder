@@ -4,6 +4,7 @@ using ImGuiNET;
 using ImGuizmoNET;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NativeFileDialogSharp;
 using Newtonsoft.Json;
@@ -83,7 +84,7 @@ namespace OpenWorldBuilder
             _configPath = Path.Combine(_prefPath, "userconfig.json");
         }
 
-        protected override void Initialize()
+        protected override void LoadContent()
         {
             SDL.SDL_MaximizeWindow(Window.Handle);
 
@@ -301,7 +302,7 @@ namespace OpenWorldBuilder
                 catch {}
             }
 
-            base.Initialize();
+            base.LoadContent();
         }
 
         protected override void OnExiting(object sender, EventArgs args)

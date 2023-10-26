@@ -176,8 +176,8 @@ namespace OpenWorldBuilder
                     Vector3 forward = Vector3.TransformNormal(-Vector3.UnitZ, cr);
                     Vector3 right = Vector3.TransformNormal(Vector3.UnitX, cr);
                     
-                    camera.rot = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(dx * -0.25f)) *
-                        Quaternion.CreateFromAxisAngle(right, MathHelper.ToRadians(dy * -0.25f)) *
+                    camera.rot = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(dx * -0.1f)) *
+                        Quaternion.CreateFromAxisAngle(right, MathHelper.ToRadians(dy * -0.1f)) *
                         camera.rot;
 
                     if (curKb.IsKeyDown(Keys.W))
