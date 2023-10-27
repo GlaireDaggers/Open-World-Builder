@@ -399,6 +399,37 @@ namespace OpenWorldBuilder
             }
         }
 
+        public void DrawBoxGizmo(Matrix transform, Color color)
+        {
+            Vector3 min = -Vector3.One * 0.5f;
+            Vector3 max = Vector3.One * 0.5f;
+
+            Vector3 p0 = Vector3.Transform(new Vector3(min.X, min.Y, min.Z), transform);
+            Vector3 p1 = Vector3.Transform(new Vector3(max.X, min.Y, min.Z), transform);
+            Vector3 p2 = Vector3.Transform(new Vector3(max.X, min.Y, max.Z), transform);
+            Vector3 p3 = Vector3.Transform(new Vector3(min.X, min.Y, max.Z), transform);
+
+            Vector3 p4 = Vector3.Transform(new Vector3(min.X, max.Y, min.Z), transform);
+            Vector3 p5 = Vector3.Transform(new Vector3(max.X, max.Y, min.Z), transform);
+            Vector3 p6 = Vector3.Transform(new Vector3(max.X, max.Y, max.Z), transform);
+            Vector3 p7 = Vector3.Transform(new Vector3(min.X, max.Y, max.Z), transform);
+
+            DrawLineGizmo(p0, p1, color, color);
+            DrawLineGizmo(p1, p2, color, color);
+            DrawLineGizmo(p2, p3, color, color);
+            DrawLineGizmo(p3, p0, color, color);
+
+            DrawLineGizmo(p4, p5, color, color);
+            DrawLineGizmo(p5, p6, color, color);
+            DrawLineGizmo(p6, p7, color, color);
+            DrawLineGizmo(p7, p4, color, color);
+
+            DrawLineGizmo(p0, p4, color, color);
+            DrawLineGizmo(p1, p5, color, color);
+            DrawLineGizmo(p2, p6, color, color);
+            DrawLineGizmo(p3, p7, color, color);
+        }
+
         public void DrawCircleGizmo(Vector3 center, float radius, Quaternion rotation, Color color)
         {
             for (int i = 0; i < 64; i++)

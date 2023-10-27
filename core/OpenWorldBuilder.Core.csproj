@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+	  <PackageReference Include="NativeFileDialogSharp" Version="0.5.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\deps\FNA\FNA.Core.csproj" />
+		<ProjectReference Include="..\deps\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
+		<ProjectReference Include="..\deps\ImGui.NET\src\ImGuizmo.NET\ImGuizmo.NET.csproj" />
+		<ProjectReference Include="..\deps\ImGui.NET\src\ImNodes.NET\ImNodes.NET.csproj" />
+		<ProjectReference Include="..\deps\ImGui.NET\src\ImPlot.NET\ImPlot.NET.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+		<Platforms>x64</Platforms>
+  </PropertyGroup>
+
+</Project>

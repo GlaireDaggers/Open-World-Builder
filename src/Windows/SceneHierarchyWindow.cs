@@ -126,6 +126,24 @@ namespace OpenWorldBuilder
                             }
                         }
                     }
+
+                    payload = ImGui.AcceptDragDropPayload("ENTITYDEF");
+                    unsafe
+                    {
+                        if (payload.NativePtr != null)
+                        {
+                            EntityDefinition def = (EntityDefinition)App.dragPayload!;
+                            Console.WriteLine("ACCEPT ENTITY: " + def.name);
+
+                            GenericEntityNode entity = new GenericEntityNode()
+                            {
+                                name = "New " + def.name
+                            };
+                            entity.SetDefinition(def);
+
+                            node.AddChild(entity);
+                        }
+                    }
                     ImGui.EndDragDropTarget();
                 }
 

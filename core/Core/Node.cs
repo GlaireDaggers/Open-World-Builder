@@ -4,7 +4,6 @@ using ImGuiNET;
 using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace OpenWorldBuilder
 {
@@ -15,9 +14,6 @@ namespace OpenWorldBuilder
     [SerializedNode("Node")]
     public class Node : IDisposable
     {
-        [JsonProperty]
-        public Guid guid = Guid.NewGuid();
-
         [JsonProperty]
         public string name = "Node";
 
@@ -87,14 +83,6 @@ namespace OpenWorldBuilder
             }
         }
 
-        public virtual void OnSerialize(JObject jObject)
-        {
-        }
-
-        public virtual void OnDeserialize(JObject jObject)
-        {
-        }
-
         public void AddChild(Node child)
         {
             Debug.Assert(child != this);
@@ -111,11 +99,11 @@ namespace OpenWorldBuilder
             child.Parent = null;
         }
 
-        public virtual void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        public virtual void Draw(Matrix view, Matrix projection, IViewport viewport, bool selected)
         {
         }
 
-        public virtual void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)
+        public virtual void DrawHandles(Matrix view, Matrix projection, IViewport viewport, bool localSpace)
         {
             Matrix parentMatrix = Parent?.World ?? Matrix.Identity;
 
@@ -125,8 +113,6 @@ namespace OpenWorldBuilder
 
         public virtual void DrawInspector()
         {
-            ImGui.TextDisabled($"{guid}");
-            
             ImGui.InputText("Name", ref name, 1024);
             ImGui.Spacing();
             ImGuiExt.DragFloat3("Position", ref position);
@@ -149,7 +135,7 @@ namespace OpenWorldBuilder
     [SerializedNode("SceneRootNode")]
     public class SceneRootNode : Node
     {
-        public override void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)
+        public override void DrawHandles(Matrix view, Matrix projection, IViewport viewport, bool localSpace)
         {
         }
 

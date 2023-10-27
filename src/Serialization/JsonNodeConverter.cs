@@ -33,6 +33,8 @@ namespace OpenWorldBuilder
             Node target = (Node)Activator.CreateInstance(targetType)!;
             serializer.Populate(jObj.CreateReader(), target);
 
+            target.OnDeserialize(jObj);
+
             var childArr = (JArray)jObj.Property("children")!.Value;
             foreach (var childTok in childArr)
             {
@@ -52,6 +54,8 @@ namespace OpenWorldBuilder
             {
                 jObj.Add("type", (JToken)attr.typeName);
             }
+
+            node.OnSerialize(jObj);
 
             var childArr = new JArray();
 

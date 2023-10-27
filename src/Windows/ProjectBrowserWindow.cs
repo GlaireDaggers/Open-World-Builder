@@ -47,6 +47,12 @@ namespace OpenWorldBuilder
                 ImGui.TreePop();
             }
 
+            if (ImGui.TreeNodeEx("Entities"))
+            {
+                DrawEntityBrowser();
+                ImGui.TreePop();
+            }
+
             if (ImGui.TreeNodeEx("Content"))
             {
                 DrawContentBrowser(_contentFolder);
@@ -82,6 +88,23 @@ namespace OpenWorldBuilder
                             App.Instance!.ChangeLevel(level);
                         }
                         catch {}
+                    }
+                    ImGui.TreePop();
+                }
+            }
+        }
+
+        private void DrawEntityBrowser()
+        {
+            foreach (var ent in App.Instance!.ActiveProject.entityDefinitions)
+            {
+                if (ImGui.TreeNodeEx(ent.name, ImGuiTreeNodeFlags.Leaf))
+                {
+                    if (ImGui.BeginDragDropSource())
+                    {
+                        App.dragPayload = ent;
+                        ImGui.SetDragDropPayload("ENTITYDEF", 0, 0);
+                        ImGui.EndDragDropSource();
                     }
                     ImGui.TreePop();
                 }

@@ -1,9 +1,11 @@
 using System.Security.Principal;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
+    [JsonObject(MemberSerialization.OptIn)]
     [SerializedNode("SplineNode")]
     public class SplineNode : Node
     {
@@ -14,7 +16,10 @@ namespace OpenWorldBuilder
             public float scale;
         }
 
+        [JsonProperty]
         public List<ControlPoint> points = new List<ControlPoint>();
+
+        [JsonProperty]
         public bool closed = false;
 
         public SplineNode()
