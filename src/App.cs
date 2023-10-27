@@ -220,10 +220,18 @@ namespace OpenWorldBuilder
 
             _undoMenuItem = AddMenuItem("Edit/Undo", () => {
                 Undo();
+            }, new Hotkey
+            {
+                ctrl = true,
+                key = Keys.Z
             });
 
             _redoMenuItem = AddMenuItem("Edit/Redo", () => {
                 Redo();
+            }, new Hotkey
+            {
+                ctrl = true,
+                key = Keys.Y
             });
 
             AddMenuItem("Nodes/New Node", () => {
@@ -396,6 +404,36 @@ namespace OpenWorldBuilder
             }
         }
 
+        private bool CheckHotkey(Hotkey hotkey)
+        {
+            if (hotkey.ctrl)
+            {
+                if (!curKeyboardState.IsKeyDown(Keys.LeftControl) && !curKeyboardState.IsKeyDown(Keys.RightControl))
+                {
+                    return false;
+                }
+            }
+
+            if (hotkey.shift)
+            {
+                if (!curKeyboardState.IsKeyDown(Keys.LeftShift) && !curKeyboardState.IsKeyDown(Keys.RightShift))
+                {
+                    return false;
+                }
+            }
+
+
+            if (hotkey.alt)
+            {
+                if (!curKeyboardState.IsKeyDown(Keys.LeftAlt) && !curKeyboardState.IsKeyDown(Keys.RightAlt))
+                {
+                    return false;
+                }
+            }
+
+            return curKeyboardState.IsKeyDown(hotkey.key) && !prevKeyboardState.IsKeyDown(hotkey.key);
+        }
+
         public void AddNodeWithUndo(string title, Node node, Node? parent = null)
         {
             parent ??= activeNode ?? _level.root;
@@ -411,8 +449,6 @@ namespace OpenWorldBuilder
             EndRecordUndo(() => {
                 parent.AddChild(node);
             });
-
-            parent.AddChild(node);
         }
 
         public void ReparentNodeWithUndo(string title, Node node, Node newParent)
@@ -428,9 +464,6 @@ namespace OpenWorldBuilder
                 prevParent.RemoveChild(node);
                 newParent.AddChild(node);
             });
-
-            prevParent.RemoveChild(node);
-            newParent.AddChild(node);
         }
 
         public void DeleteNodeWithUndo(string title, Node node)
@@ -444,8 +477,6 @@ namespace OpenWorldBuilder
             EndRecordUndo(() => {
                 prevParent.RemoveChild(node);
             });
-
-            prevParent.RemoveChild(node);
         }
 
         public void BeginRecordUndo(string title, Action callback)
@@ -465,6 +496,8 @@ namespace OpenWorldBuilder
             _activeCmd = null;
 
             UpdateUndoRedoMenu();
+
+            callback.Invoke();
         }
 
         public void ClearUndoRedo()
@@ -534,7 +567,7 @@ namespace OpenWorldBuilder
             return win;
         }
 
-        public MenuItem AddMenuItem(string path, Action callback)
+        public MenuItem AddMenuItem(string path, Action callback, Hotkey? hotkey = null)
         {
             string[] folders = path.Split('/');
 
@@ -544,7 +577,7 @@ namespace OpenWorldBuilder
                 c = c.GetOrCreateSubMenu(folders[i]);
             }
 
-            MenuItem item = new MenuItem(folders[folders.Length - 1], callback);
+            MenuItem item = new MenuItem(folders[folders.Length - 1], callback, hotkey);
             c.subItems.Add(item);
 
             return item;
@@ -700,12 +733,30 @@ namespace OpenWorldBuilder
                 ImGui.EndMainMenuBar();
             }
 
+            CheckMenuHotkeys(_rootMenu);
+
             foreach (var w in _windows)
             {
                 w.Draw(time);
             }
 
             _windows.RemoveAll(x => x.IsOpen == false);
+        }
+
+        private void CheckMenuHotkeys(MenuContainer c)
+        {
+            foreach (var m in c.subMenus)
+            {
+                CheckMenuHotkeys(m);
+            }
+
+            foreach (var m in c.subItems)
+            {
+                if (m.enabled && m.hotkey is Hotkey hotkey && CheckHotkey(hotkey))
+                {
+                    m.callback();
+                }
+            }
         }
 
         private void DrawMenu(MenuContainer c)

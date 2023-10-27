@@ -64,8 +64,6 @@ namespace OpenWorldBuilder
                 App.Instance!.EndRecordUndo(() => {
                     lightType = (LightType)lightTypeIdx;
                 });
-
-                lightType = (LightType)lightTypeIdx;
             }
 
             ImGuiExt.ColorEdit3("Color", ref color);

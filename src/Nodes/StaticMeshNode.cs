@@ -159,7 +159,6 @@ namespace OpenWorldBuilder
                     collision = (CollisionType)col;
                 });
             }
-            collision = (CollisionType)col;
 
             ImGui.Spacing();
 
@@ -188,12 +187,6 @@ namespace OpenWorldBuilder
                     }
                     catch {}
                 });
-
-                try
-                {
-                    LoadMesh(meshPath);
-                }
-                catch {}
             }
 
             ImGui.SameLine();
@@ -220,12 +213,6 @@ namespace OpenWorldBuilder
                         }
                         catch {}
                     });
-
-                    try
-                    {
-                        LoadMesh(assetPath);
-                    }
-                    catch {}
                 }
             }
         }

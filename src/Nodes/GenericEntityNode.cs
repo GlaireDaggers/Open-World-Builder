@@ -159,7 +159,6 @@ namespace OpenWorldBuilder
                                 fields[fieldDef.name] = obj;
                             });
                         });
-                        fields[fieldDef.name] = obj;
                     }
                 }
             }
@@ -209,7 +208,7 @@ namespace OpenWorldBuilder
                         App.Instance!.EndRecordUndo(() => {
                             list.RemoveAt(idx);
                         });
-                        list.RemoveAt(i--);
+                        i--;
                         continue;
                     }
                     list[i] = obj;
@@ -222,7 +221,6 @@ namespace OpenWorldBuilder
                     App.Instance!.EndRecordUndo(() => {
                         list.Add(CreateInstance(innerType));
                     });
-                    list.Add(CreateInstance(innerType));
                 }
                 ImGui.Unindent();
             }

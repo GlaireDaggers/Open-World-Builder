@@ -79,7 +79,7 @@ namespace OpenWorldBuilder
                         App.Instance!.EndRecordUndo(() => {
                             points.RemoveAt(idx);
                         });
-                        points.RemoveAt(i--);
+                        i--;
                         continue;
                     }
                 }
@@ -97,7 +97,6 @@ namespace OpenWorldBuilder
                     App.Instance!.EndRecordUndo(() => {
                         points.Insert(idx + 1, newCp);
                     });
-                    points.Insert(i + 1, newCp);
                 }
 
                 ImGuiExt.DragFloat3("Position##cp" + i, ref cp.position);

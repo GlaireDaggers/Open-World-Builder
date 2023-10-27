@@ -3,20 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Input;
 
 namespace OpenWorldBuilder
 {
+    public struct Hotkey
+    {
+        public bool ctrl;
+        public bool shift;
+        public bool alt;
+        public Keys key;
+    }
+
     public class MenuItem
     {
         public bool enabled;
         public string name;
         public Action callback;
+        public Hotkey? hotkey;
 
-        public MenuItem(string name, Action callback)
+        public MenuItem(string name, Action callback, Hotkey? hotkey = null)
         {
             this.enabled = true;
             this.name = name;
             this.callback = callback;
+            this.hotkey = hotkey;
         }
     }
 
