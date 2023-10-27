@@ -15,7 +15,7 @@ namespace OpenWorldBuilder
         Color,
         MultilineString,
         FilePath,
-        EntityRef,
+        NodeRef,
     }
 
     public enum EntityGizmoShape

@@ -15,6 +15,15 @@ namespace OpenWorldBuilder
     [SerializedNode("Node")]
     public class Node : IDisposable
     {
+        public SceneRootNode? Scene
+        {
+            get
+            {
+                if (this is SceneRootNode scene) return scene;
+                return Parent?.Scene;
+            }
+        }
+
         [JsonProperty]
         public Guid guid = Guid.NewGuid();
 
@@ -71,6 +80,23 @@ namespace OpenWorldBuilder
 
         private List<Node> _children = new List<Node>();
 
+        public Node? FindChildByGuid(Guid guid)
+        {
+            foreach (var child in _children)
+            {
+                if (child.guid == guid)
+                {
+                    return child; 
+                }
+                else if (child.FindChildByGuid(guid) is Node match)
+                {
+                    return match;
+                }
+            }
+
+            return null;
+        }
+
         public virtual void OnLoad()
         {
             foreach (var child in _children)
@@ -126,7 +152,7 @@ namespace OpenWorldBuilder
         public virtual void DrawInspector()
         {
             ImGui.TextDisabled($"{guid}");
-            
+
             ImGui.InputText("Name", ref name, 1024);
             ImGui.Spacing();
             ImGuiExt.DragFloat3("Position", ref position);

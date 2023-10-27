@@ -15,11 +15,11 @@ namespace OpenWorldBuilder
             "Vector2",
             "Vector3",
             "Vector4",
-            "Quaternion",
+            "Rotation",
             "Color",
             "Multiline String",
             "File Path",
-            "Entity Ref",
+            "Node Ref",
         };
 
         private string _newEntityDefName = "";

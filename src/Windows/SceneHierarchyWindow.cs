@@ -81,8 +81,8 @@ namespace OpenWorldBuilder
                 ImGui.SetDragDropPayload("NODE", 0, 0);
                 ImGui.EndDragDropSource();
             }
-
-            if (ImGui.IsItemClicked())
+            
+            if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left))
             {
                 selectedNode = node;
             }

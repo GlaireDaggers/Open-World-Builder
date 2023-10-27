@@ -2,6 +2,7 @@ using System.Collections;
 using System.Diagnostics;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
+using NativeFileDialogSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -24,7 +25,7 @@ namespace OpenWorldBuilder
             typeof(Color),
             typeof(string),
             typeof(string),
-            typeof(Guid),
+            typeof(string),
         };
 
         [JsonProperty]
@@ -47,7 +48,7 @@ namespace OpenWorldBuilder
                     fieldType = listType.MakeGenericType(fieldType);
                 }
 
-                fields.Add(fieldDef.name, Activator.CreateInstance(fieldType)!);
+                fields.Add(fieldDef.name, CreateInstance(fieldType));
             }
         }
 
@@ -131,12 +132,12 @@ namespace OpenWorldBuilder
                     {
                         if (field.GetType() != fieldType)
                         {
-                            fields[fieldDef.name] = Activator.CreateInstance(fieldType)!;
+                            fields[fieldDef.name] = CreateInstance(fieldType);
                         }
                     }
                     else
                     {
-                        fields.Add(fieldDef.name, Activator.CreateInstance(fieldType)!);
+                        fields.Add(fieldDef.name, CreateInstance(fieldType));
                     }
 
                     // edit field
@@ -158,6 +159,16 @@ namespace OpenWorldBuilder
             }
         }
 
+        private object CreateInstance(Type type)
+        {
+            if (type == typeof(string))
+            {
+                return "";
+            }
+
+            return Activator.CreateInstance(type)!;
+        }
+
         private void EditFieldList(string fieldName, EntityFieldType fieldType, object fieldData)
         {
             IList list = (IList)fieldData;
@@ -170,7 +181,7 @@ namespace OpenWorldBuilder
                 for (int i = 0; i < list.Count; i++)
                 {
                     object obj = list[i]!;
-                    EditFieldSingle($"##edit_{fieldName}_{i}", fieldType, ref obj);
+                    EditFieldSingle($"Element {i}##edit_{fieldName}_{i}", fieldType, ref obj);
                     if (ImGui.Button($"Delete##{fieldName}_{i}"))
                     {
                         list.RemoveAt(i--);
@@ -180,7 +191,7 @@ namespace OpenWorldBuilder
                 }
                 if (ImGui.Button($"Add##{fieldName}"))
                 {
-                    list.Add(Activator.CreateInstance(innerType));
+                    list.Add(CreateInstance(innerType));
                 }
                 ImGui.Unindent();
             }
@@ -231,16 +242,71 @@ namespace OpenWorldBuilder
                     fieldData = c;
                 break;
                 case EntityFieldType.Quaternion:
-                    ImGui.Text("TODO");
+                    Quaternion q = (Quaternion)fieldData;
+                    Vector3 euler = MathUtils.ToEulerAngles(q);
+                    euler = MathUtils.ToDegrees(euler);
+                    if (ImGuiExt.DragFloat3(fieldName, ref euler))
+                    {
+                        euler = MathUtils.ToRadians(euler);
+                        q = MathUtils.ToQuaternion(euler);
+                    }
+                    fieldData = q;
                 break;
                 case EntityFieldType.MultilineString:
-                    ImGui.Text("TODO");
+                    string s2 = (string)fieldData;
+                    float widgetWidth = ImGui.CalcItemWidth();
+                    float widgetHeight = ImGui.GetTextLineHeightWithSpacing();
+                    ImGui.InputTextMultiline(fieldName, ref s2, 8192, new System.Numerics.Vector2(widgetWidth, widgetHeight * 4f));
+                    fieldData = s2;
                 break;
                 case EntityFieldType.FilePath:
-                    ImGui.Text("TODO");
+                    string s3 = (string)fieldData;
+                    ImGui.InputText(fieldName, ref s3, 1024);
+                    ImGui.SameLine();
+                    if (ImGui.Button("Browse##" + fieldName))
+                    {
+                        var fileResult = Dialog.FileOpen(null, App.Instance!.ProjectFolder);
+                        if (fileResult.IsOk)
+                        {
+                            // make relative to project folder
+                            s3 = Path.GetRelativePath(App.Instance!.ProjectFolder!, fileResult.Path);
+                        }
+                    }
+                    fieldData = s3;
                 break;
-                case EntityFieldType.EntityRef:
-                    ImGui.Text("TODO");
+                case EntityFieldType.NodeRef:
+                    string n = (string)fieldData;
+                    if (n == "")
+                    {
+                        ImGui.LabelText(fieldName, "(none)");
+                    }
+                    else
+                    {
+                        var node = Scene?.FindChildByGuid(Guid.Parse(n));
+                        if (node == null)
+                        {
+                            ImGui.LabelText(fieldName, "(invalid reference)");
+                        }
+                        else
+                        {
+                            ImGui.LabelText(fieldName, node.name);
+                        }
+                    }
+                    if (ImGui.BeginDragDropTarget())
+                    {
+                        var payload = ImGui.AcceptDragDropPayload("NODE");
+                        unsafe
+                        {
+                            if (payload.NativePtr != null)
+                            {
+                                Node payloadNode = (Node)App.dragPayload!;
+                                Console.WriteLine("ACCEPT NODE: " + payloadNode.name);
+                                n = payloadNode.guid.ToString();
+                            }
+                        }
+                        ImGui.EndDragDropTarget();
+                    }
+                    fieldData = n;
                 break;
             }
         }
