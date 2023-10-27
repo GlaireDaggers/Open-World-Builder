@@ -145,17 +145,63 @@ namespace OpenWorldBuilder
         {
             Matrix parentMatrix = Parent?.World ?? Matrix.Identity;
 
+            Vector3 prevPos = position;
+            Quaternion prevRot = rotation;
+            Vector3 prevScale = scale;
+
             viewport.GlobalTransformHandle(ref position, ref rotation,
-                ref scale, parentMatrix, localSpace);
+                ref scale, parentMatrix, localSpace, () => {
+                    App.Instance!.BeginRecordUndo("Transform Node", () => {
+                        position = prevPos;
+                        rotation = prevRot;
+                        scale = prevScale;
+                    });
+                }, () => {
+                    App.Instance!.EndRecordUndo(() => {
+                        position = prevPos;
+                        rotation = prevRot;
+                        scale = prevScale;
+                    });
+                });
         }
 
         public virtual void DrawInspector()
         {
             ImGui.TextDisabled($"{guid}");
 
+            string prevName = name;
+            Vector3 prevPos = position;
+            Quaternion prevRot = rotation;
+            Vector3 prevScale = scale;
+
             ImGui.InputText("Name", ref name, 1024);
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Rename Node", () => {
+                    name = prevName;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    name = prevName;
+                });
+            }
+
             ImGui.Spacing();
             ImGuiExt.DragFloat3("Position", ref position);
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Change Node Position", () => {
+                    position = prevPos;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    position = prevPos;
+                });
+            }
 
             Vector3 euler = MathUtils.ToEulerAngles(rotation);
             euler = MathUtils.ToDegrees(euler);
@@ -164,8 +210,32 @@ namespace OpenWorldBuilder
                 euler = MathUtils.ToRadians(euler);
                 rotation = MathUtils.ToQuaternion(euler);
             }
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Change Node Rotation", () => {
+                    rotation = prevRot;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    rotation = prevRot;
+                });
+            }
 
             ImGuiExt.DragFloat3("Scale", ref scale);
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Change Node Scale", () => {
+                    scale = prevScale;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    scale = prevScale;
+                });
+            }
         }
     }
 

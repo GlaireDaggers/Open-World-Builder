@@ -10,6 +10,7 @@ using NativeFileDialogSharp;
 using Newtonsoft.Json;
 using ObjLoader.Loader.Loaders;
 using SDL2;
+using SharpGLTF.Transforms;
 
 namespace OpenWorldBuilder
 {
@@ -64,6 +65,13 @@ namespace OpenWorldBuilder
         private FileSystemWatcher? _levelWatcher;
         private bool _queueUpdateContent = false;
         private bool _queueUpdateLevels = false;
+
+        private Command? _activeCmd = null;
+        private Stack<Command> _undoStack = new Stack<Command>();
+        private Stack<Command> _redoStack = new Stack<Command>();
+
+        private MenuItem _undoMenuItem;
+        private MenuItem _redoMenuItem;
 
         public App()
         {
@@ -128,6 +136,7 @@ namespace OpenWorldBuilder
                         }
                         UpdateContent();
                         UpdateLevelFolder();
+                        ClearUndoRedo();
                     }
                     catch {}
                 }
@@ -147,6 +156,7 @@ namespace OpenWorldBuilder
                         _projectPath = projpath;
                         UpdateContent();
                         UpdateLevelFolder();
+                        ClearUndoRedo();
                     }
                     catch {}
                 });
@@ -208,16 +218,17 @@ namespace OpenWorldBuilder
                 File.WriteAllText(Path.Combine(ProjectFolder!, $"levels/{_level.root.name}.owblevel"), levelData);
             });
 
+            _undoMenuItem = AddMenuItem("Edit/Undo", () => {
+                Undo();
+            });
+
+            _redoMenuItem = AddMenuItem("Edit/Redo", () => {
+                Redo();
+            });
+
             AddMenuItem("Nodes/New Node", () => {
                 Node node = new Node();
-                if (activeNode != null)
-                {
-                    activeNode.AddChild(node);
-                }
-                else
-                {
-                    _level.root.AddChild(node);
-                }
+                AddNodeWithUndo("Create Node", node);
             });
 
             AddMenuItem("Nodes/New Spline", () => {
@@ -225,14 +236,7 @@ namespace OpenWorldBuilder
                 {
                     name = "Spline"
                 };
-                if (activeNode != null)
-                {
-                    activeNode.AddChild(node);
-                }
-                else
-                {
-                    _level.root.AddChild(node);
-                }
+                AddNodeWithUndo("Create Spline", node);
             });
 
             AddMenuItem("Nodes/Lights/New Point Light", () => {
@@ -240,14 +244,7 @@ namespace OpenWorldBuilder
                 {
                     name = "Point Light"
                 };
-                if (activeNode != null)
-                {
-                    activeNode.AddChild(node);
-                }
-                else
-                {
-                    _level.root.AddChild(node);
-                }
+                AddNodeWithUndo("Create Point Light", node);
             });
 
             AddMenuItem("Nodes/Lights/New Directional Light", () => {
@@ -256,14 +253,7 @@ namespace OpenWorldBuilder
                     name = "Directional Light",
                     lightType = LightType.Directional
                 };
-                if (activeNode != null)
-                {
-                    activeNode.AddChild(node);
-                }
-                else
-                {
-                    _level.root.AddChild(node);
-                }
+                AddNodeWithUndo("Create Directional Light", node);
             });
 
             AddMenuItem("Nodes/Lights/New Spot Light", () => {
@@ -272,14 +262,7 @@ namespace OpenWorldBuilder
                     name = "Spot Light",
                     lightType = LightType.Spot
                 };
-                if (activeNode != null)
-                {
-                    activeNode.AddChild(node);
-                }
-                else
-                {
-                    _level.root.AddChild(node);
-                }
+                AddNodeWithUndo("Create Spot Light", node);
             });
 
             AddMenuItem("Window/Project Settings", () =>
@@ -306,6 +289,8 @@ namespace OpenWorldBuilder
             {
                 GetWindow<SceneWindow>();
             });
+
+            UpdateUndoRedoMenu();
 
             // try to restore editor layout
             foreach (var win in _config.openWindows)
@@ -380,6 +365,132 @@ namespace OpenWorldBuilder
             }
         }
 
+        private void UpdateUndoRedoMenu()
+        {
+            _undoMenuItem.enabled = _undoStack.Count > 0;
+            _redoMenuItem.enabled = _redoStack.Count > 0;
+
+            if (_undoStack.Count > 0)
+            {
+                _undoMenuItem.name = "Undo " + _undoStack.Peek().title;
+            }
+            else
+            {
+                _undoMenuItem.name = "Undo";
+            }
+
+            if (_redoStack.Count > 0)
+            {
+                _redoMenuItem.name = "Redo " + _redoStack.Peek().title;
+            }
+            else
+            {
+                _redoMenuItem.name = "Redo";
+            }
+        }
+
+        public void AddNodeWithUndo(string title, Node node, Node? parent = null)
+        {
+            parent ??= activeNode ?? _level.root;
+
+            BeginRecordUndo(title, () => {
+                if (node == activeNode)
+                {
+                    activeNode = null;
+                }
+                parent.RemoveChild(node);
+            });
+
+            EndRecordUndo(() => {
+                parent.AddChild(node);
+            });
+
+            parent.AddChild(node);
+        }
+
+        public void ReparentNodeWithUndo(string title, Node node, Node newParent)
+        {
+            var prevParent = node.Parent!;
+
+            BeginRecordUndo(title, () => {
+                newParent.RemoveChild(node);
+                prevParent.AddChild(node);
+            });
+
+            EndRecordUndo(() => {
+                prevParent.RemoveChild(node);
+                newParent.AddChild(node);
+            });
+
+            prevParent.RemoveChild(node);
+            newParent.AddChild(node);
+        }
+
+        public void DeleteNodeWithUndo(string title, Node node)
+        {
+            var prevParent = node.Parent!;
+
+            BeginRecordUndo(title, () => {
+                prevParent.AddChild(node);
+            });
+
+            EndRecordUndo(() => {
+                prevParent.RemoveChild(node);
+            });
+
+            prevParent.RemoveChild(node);
+        }
+
+        public void BeginRecordUndo(string title, Action callback)
+        {
+            _activeCmd = new Command
+            {
+                title = title,
+                undo = callback
+            };
+        }
+
+        public void EndRecordUndo(Action callback)
+        {
+            _activeCmd!.execute = callback;
+            _undoStack.Push(_activeCmd);
+            _redoStack.Clear();
+            _activeCmd = null;
+
+            UpdateUndoRedoMenu();
+        }
+
+        public void ClearUndoRedo()
+        {
+            _undoStack.Clear();
+            _redoStack.Clear();
+            UpdateUndoRedoMenu();
+        }
+
+        public void Undo()
+        {
+            if (_undoStack.Count > 0)
+            {
+                var cmd = _undoStack.Pop();
+                cmd.undo();
+                _redoStack.Push(cmd);
+
+                UpdateUndoRedoMenu();
+            }
+        }
+
+        public void Redo()
+        {
+            if (_redoStack.Count > 0)
+            {
+                var cmd = _redoStack.Pop();
+                cmd.execute();
+                _undoStack.Push(cmd);
+
+                UpdateUndoRedoMenu();
+            }
+        }
+
         public T GetWindow<T>() where T : EditorWindow, new()
         {
             foreach (var w in _windows)
@@ -416,7 +527,7 @@ namespace OpenWorldBuilder
             return win;
         }
 
-        public void AddMenuItem(string path, Action callback)
+        public MenuItem AddMenuItem(string path, Action callback)
         {
             string[] folders = path.Split('/');
 
@@ -426,7 +537,10 @@ namespace OpenWorldBuilder
                 c = c.GetOrCreateSubMenu(folders[i]);
             }
 
-            c.subItems.Add(new MenuItem(folders[folders.Length - 1], callback));
+            MenuItem item = new MenuItem(folders[folders.Length - 1], callback);
+            c.subItems.Add(item);
+
+            return item;
         }
 
         public void AddNodeFactory(AssetNodeFactory nodeFactory)
@@ -470,6 +584,7 @@ namespace OpenWorldBuilder
             _level.Dispose();
             _level = level;
             level.root.OnLoad();
+            ClearUndoRedo();
         }
 
         public void UpdateLevelFolder()
@@ -599,7 +714,7 @@ namespace OpenWorldBuilder
 
             foreach (var m in c.subItems)
             {
-                if (ImGui.MenuItem(m.name))
+                if (ImGui.MenuItem(m.name, m.enabled))
                 {
                     m.callback();
                 }

@@ -47,17 +47,109 @@ namespace OpenWorldBuilder
 
             ImGui.Spacing();
 
+            Color prevColor = color;
+            float prevIntensity = intensity;
+            float prevRadius = radius;
+            float prevInnerConeAngle = innerConeAngle;
+            float prevOuterConeAngle = outerConeAngle;
+
+            LightType prevLightType = lightType;
+
             int lightTypeIdx = (int)lightType;
             if (ImGui.Combo("Light Type", ref lightTypeIdx, lightTypeNames, 3))
             {
+                App.Instance!.BeginRecordUndo("Change Light Type", () => {
+                    lightType = prevLightType;
+                });
+                App.Instance!.EndRecordUndo(() => {
+                    lightType = (LightType)lightTypeIdx;
+                });
+
                 lightType = (LightType)lightTypeIdx;
             }
 
             ImGuiExt.ColorEdit3("Color", ref color);
+
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Change Light Color", () => {
+                    color = prevColor;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    color = prevColor;
+                });
+            }
+
             ImGui.DragFloat("Intensity", ref intensity);
-            ImGui.DragFloat("Radius", ref radius);
-            ImGui.DragFloat("Inner Cone Angle", ref innerConeAngle);
-            ImGui.DragFloat("Outer Cone Angle", ref outerConeAngle);
+
+            if (ImGui.IsItemActivated())
+            {
+                App.Instance!.BeginRecordUndo("Change Light Intensity", () => {
+                    intensity = prevIntensity;
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                App.Instance!.EndRecordUndo(() => {
+                    intensity = prevIntensity;
+                });
+            }
+
+            if (lightType != LightType.Directional) {
+                ImGui.DragFloat("Radius", ref radius);
+
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Light Radius", () => {
+                        radius = prevRadius;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        radius = prevRadius;
+                    });
+                }
+            }
+
+            if (lightType == LightType.Spot) {
+                ImGui.DragFloat("Inner Cone Angle", ref innerConeAngle);
+
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Light Cone Angle", () => {
+                        innerConeAngle = prevInnerConeAngle;
+                        outerConeAngle = prevOuterConeAngle;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        innerConeAngle = prevInnerConeAngle;
+                        outerConeAngle = prevOuterConeAngle;
+                    });
+                }
+
+                ImGui.DragFloat("Outer Cone Angle", ref outerConeAngle);
+
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Light Cone Angle", () => {
+                        innerConeAngle = prevInnerConeAngle;
+                        outerConeAngle = prevOuterConeAngle;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        innerConeAngle = prevInnerConeAngle;
+                        outerConeAngle = prevOuterConeAngle;
+                    });
+                }
+            }
 
             if (intensity < 0f)
             {

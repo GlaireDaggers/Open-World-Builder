@@ -45,13 +45,27 @@ namespace OpenWorldBuilder
 
             ImGui.Spacing();
 
-            ImGui.Checkbox("Closed", ref closed);
+            bool prevClosed = closed;
+
+            if (ImGui.Checkbox("Closed", ref closed))
+            {
+                bool newClosed = closed;
+
+                App.Instance!.BeginRecordUndo("Change Spline Closed", () => {
+                    closed = prevClosed;
+                });
+
+                App.Instance!.EndRecordUndo(() => {
+                    closed = newClosed;
+                });
+            }
 
             ImGui.Text("Control Points: " + points.Count);
 
             for (int i = 0; i < points.Count; i++)
             {
                 var cp = points[i];
+                int idx = i;
                 ImGui.Text("CP " + i);
 
                 if (points.Count > 1)
@@ -59,6 +73,12 @@ namespace OpenWorldBuilder
                     ImGui.SameLine();
                     if (ImGui.Button("Delete##cp" + i))
                     {
+                        App.Instance!.BeginRecordUndo("Delete Spline CP", () => {
+                            points.Insert(idx, cp);
+                        });
+                        App.Instance!.EndRecordUndo(() => {
+                            points.RemoveAt(idx);
+                        });
                         points.RemoveAt(i--);
                         continue;
                     }
@@ -71,10 +91,29 @@ namespace OpenWorldBuilder
                     var fw = Vector3.TransformNormal(Vector3.UnitZ, mat);
                     ControlPoint newCp = cp;
                     newCp.position += fw;
+                    App.Instance!.BeginRecordUndo("Duplicate Spline CP", () => {
+                        points.RemoveAt(idx + 1);
+                    });
+                    App.Instance!.EndRecordUndo(() => {
+                        points.Insert(idx + 1, newCp);
+                    });
                     points.Insert(i + 1, newCp);
                 }
 
                 ImGuiExt.DragFloat3("Position##cp" + i, ref cp.position);
+
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Spline CP Position", () => {
+                        points[idx] = cp;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        points[idx] = cp;
+                    });
+                }
                 
                 Vector3 euler = MathUtils.ToEulerAngles(cp.rotation);
                 euler = MathUtils.ToDegrees(euler);
@@ -84,7 +123,33 @@ namespace OpenWorldBuilder
                     cp.rotation = MathUtils.ToQuaternion(euler);
                 }
 
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Spline CP Rotation", () => {
+                        points[idx] = cp;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        points[idx] = cp;
+                    });
+                }
+
                 ImGui.DragFloat("Scale##cp" + i, ref cp.scale);
+
+                if (ImGui.IsItemActivated())
+                {
+                    App.Instance!.BeginRecordUndo("Change Spline CP Scale", () => {
+                        points[idx] = cp;
+                    });
+                }
+                if (ImGui.IsItemDeactivatedAfterEdit())
+                {
+                    App.Instance!.EndRecordUndo(() => {
+                        points[idx] = cp;
+                    });
+                }
 
                 if (cp.scale < 0f)
                 {
@@ -156,9 +221,18 @@ namespace OpenWorldBuilder
 
             for (int i = 0; i < points.Count; i++)
             {
+                int idx = i;
                 var pt = points[i];
                 Vector3 sc = Vector3.One * pt.scale;
-                viewport.GlobalTransformHandle(ref pt.position, ref pt.rotation, ref sc, World, localSpace);
+                viewport.GlobalTransformHandle(ref pt.position, ref pt.rotation, ref sc, World, localSpace, () => {
+                    App.Instance!.BeginRecordUndo("Transform Spline CP", () => {
+                        points[idx] = pt;
+                    });
+                }, () => {
+                    App.Instance!.EndRecordUndo(() => {
+                        points[idx] = pt;
+                    });
+                });
                 pt.scale = MathF.Max(MathF.Max(sc.X, sc.Y), sc.Z);
                 points[i] = pt;
             }

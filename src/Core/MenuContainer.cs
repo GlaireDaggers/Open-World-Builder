@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace OpenWorldBuilder
 {
-    public struct MenuItem
+    public class MenuItem
     {
+        public bool enabled;
         public string name;
         public Action callback;
 
         public MenuItem(string name, Action callback)
         {
+            this.enabled = true;
             this.name = name;
             this.callback = callback;
         }

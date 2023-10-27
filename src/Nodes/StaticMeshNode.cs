@@ -136,29 +136,90 @@ namespace OpenWorldBuilder
 
             ImGui.Spacing();
 
-            ImGui.Checkbox("Visible", ref visible);
+            bool prevVisible = visible;
+            if (ImGui.Checkbox("Visible", ref visible))
+            {
+                var newVisible = visible;
+                App.Instance!.BeginRecordUndo("Change Mesh Visible", () => {
+                    visible = prevVisible;
+                });
+                App.Instance!.EndRecordUndo(() => {
+                    visible = newVisible;
+                });
+            }
 
             int col = (int)collision;
-            ImGui.Combo("Collision Type", ref col, "None\0Collide\0Trigger");
+            var prevCollision = collision;
+            if (ImGui.Combo("Collision Type", ref col, "None\0Collide\0Trigger"))
+            {
+                App.Instance!.BeginRecordUndo("Change Mesh Collision Type", () => {
+                    collision = prevCollision;
+                });
+                App.Instance!.EndRecordUndo(() => {
+                    collision = (CollisionType)col;
+                });
+            }
             collision = (CollisionType)col;
 
             ImGui.Spacing();
 
-            if (ImGui.InputText("Mesh", ref meshPath, 1024, ImGuiInputTextFlags.EnterReturnsTrue))
+            var prevMeshPath = meshPath;
+            ImGui.InputText("Mesh", ref meshPath, 1024);
+
+            if (ImGui.IsItemActivated())
             {
+                App.Instance!.BeginRecordUndo("Change Mesh Path", () => {
+                    meshPath = prevMeshPath;
+                    try
+                    {
+                        LoadMesh(meshPath);
+                    }
+                    catch {}
+                });
+            }
+            if (ImGui.IsItemDeactivatedAfterEdit())
+            {
+                var newMeshPath = meshPath;
+                App.Instance!.EndRecordUndo(() => {
+                    meshPath = newMeshPath;
+                    try
+                    {
+                        LoadMesh(meshPath);
+                    }
+                    catch {}
+                });
+
                 try
                 {
                     LoadMesh(meshPath);
                 }
                 catch {}
             }
+
             ImGui.SameLine();
             if (ImGui.Button("Browse"))
             {
-                var result = Dialog.FileOpen("obj", App.Instance!.ActiveProject.contentPath);
+                var result = Dialog.FileOpen("obj,gltf,glb", App.Instance!.ContentPath);
                 if (result.IsOk)
                 {
-                    var assetPath = Path.GetRelativePath(App.Instance!.ActiveProject.contentPath, result.Path);
+                    var assetPath = Path.GetRelativePath(App.Instance!.ContentPath!, result.Path);
+
+                    App.Instance!.BeginRecordUndo("Change Mesh Path", () => {
+                        meshPath = prevMeshPath;
+                        try
+                        {
+                            LoadMesh(prevMeshPath);
+                        }
+                        catch {}
+                    });
+                    App.Instance!.EndRecordUndo(() => {
+                        meshPath = assetPath;
+                        try
+                        {
+                            LoadMesh(assetPath);
+                        }
+                        catch {}
+                    });
 
                     try
                     {

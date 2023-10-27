@@ -29,8 +29,7 @@ namespace OpenWorldBuilder
             while (_reparent.Count > 0)
             {
                 var op = _reparent.Dequeue();
-                op.node.Parent?.RemoveChild(op.node);
-                op.newParent.AddChild(op.node);
+                App.Instance!.ReparentNodeWithUndo("Change Node Parent", op.node, op.newParent);
             }
 
             if (selectedNode != null)
@@ -47,13 +46,7 @@ namespace OpenWorldBuilder
                 if (ImGui.IsWindowFocused() && App.Instance!.curKeyboardState.IsKeyDown(Keys.Delete) && App.Instance!.prevKeyboardState.IsKeyUp(Keys.Delete))
                 {
                     var node = App.Instance.activeNode;
-
-                    if (node.Parent != null)
-                    {
-                        node.Parent.RemoveChild(node);
-                        node.Dispose();
-                    }
-                    
+                    App.Instance!.DeleteNodeWithUndo("Delete Node", node);
                     App.Instance!.activeNode = null;
                 }
             }
@@ -101,7 +94,7 @@ namespace OpenWorldBuilder
                             // try to construct a node as child
                             if (App.Instance!.TryCreateNode((string)App.dragPayload!) is Node newNode)
                             {
-                                node.AddChild(newNode);
+                                App.Instance!.AddNodeWithUndo("Instantiate Asset Node", newNode, node);
                             }
                             
                             App.dragPayload = null;
@@ -141,7 +134,7 @@ namespace OpenWorldBuilder
                             };
                             entity.SetDefinition(def);
 
-                            node.AddChild(entity);
+                            App.Instance!.AddNodeWithUndo("Create Generic Entity", entity, node);
                         }
                     }
                     ImGui.EndDragDropTarget();
