@@ -55,6 +55,7 @@ namespace OpenWorldBuilder
                 _directionalLightColor[i] = _tmpDirectional[i].color.ToVector3() * _tmpDirectional[i].intensity;
             }
 
+            _basicLit.Parameters["AmbientLightColor"].SetValue(App.Instance!.ActiveLevel.root.ambientColor.ToVector3() * App.Instance!.ActiveLevel.root.ambientIntensity);
             _basicLit.Parameters["DirectionalLightCount"].SetValue(dirLightCount);
             _basicLit.Parameters["DirectionalLightFwd"].SetValue(_directionalLightFwd);
             _basicLit.Parameters["DirectionalLightCol"].SetValue(_directionalLightColor);

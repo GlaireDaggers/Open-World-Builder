@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using ImGuiNET;
-
-using ImGuizmoNET;
+﻿using ImGuiNET;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +7,6 @@ using NativeFileDialogSharp;
 using Newtonsoft.Json;
 using ObjLoader.Loader.Loaders;
 using SDL2;
-using SharpGLTF.Transforms;
 
 namespace OpenWorldBuilder
 {
@@ -58,6 +54,9 @@ namespace OpenWorldBuilder
         private string _configPath;
 
         private Level _level = new Level();
+        private string? _levelPath = null;
+        private bool _levelModified = false;
+
         private Project _project = new Project();
         private string? _projectPath = null;
 
@@ -72,6 +71,9 @@ namespace OpenWorldBuilder
 
         private MenuItem _undoMenuItem;
         private MenuItem _redoMenuItem;
+
+        private DialogBox? _activeDialog;
+        private bool _dialogOpenQueued = false;
 
         public App()
         {
@@ -95,6 +97,7 @@ namespace OpenWorldBuilder
         protected override void LoadContent()
         {
             SDL.SDL_MaximizeWindow(Window.Handle);
+            UpdateWindowTitle();
 
             var objLoaderFactory = new ObjLoaderFactory();
             objLoader = objLoaderFactory.Create();
@@ -137,6 +140,7 @@ namespace OpenWorldBuilder
                         UpdateContent();
                         UpdateLevelFolder();
                         ClearUndoRedo();
+                        UpdateWindowTitle();
                     }
                     catch {}
                 }
@@ -157,6 +161,7 @@ namespace OpenWorldBuilder
                         UpdateContent();
                         UpdateLevelFolder();
                         ClearUndoRedo();
+                        UpdateWindowTitle();
                     }
                     catch {}
                 });
@@ -185,6 +190,7 @@ namespace OpenWorldBuilder
                         }
 
                         UpdateLevelFolder();
+                        UpdateWindowTitle();
                     }
                 }
             });
@@ -206,16 +212,66 @@ namespace OpenWorldBuilder
                     }
 
                     UpdateLevelFolder();
+                    UpdateWindowTitle();
                 }
             });
 
-            AddMenuItem("File/Save Level", () => {
+            AddMenuItem("File/New Level", () =>
+            {
+                _level.Dispose();
+                _level = new Level();
+                _levelPath = null;
+                ClearUndoRedo();
+                UpdateWindowTitle();
+            }, new Hotkey
+            {
+                ctrl = true,
+                key = Keys.N
+            });
+
+            AddMenuItem("File/Save Level", () =>
+            {
                 JsonSerializerSettings settings = new JsonSerializerSettings();
                 settings.Converters.Add(new JsonNodeConverter());
 
                 string levelData = JsonConvert.SerializeObject(_level, settings);
                 Directory.CreateDirectory(Path.Combine(ProjectFolder!, "levels"));
-                File.WriteAllText(Path.Combine(ProjectFolder!, $"levels/{_level.root.name}.owblevel"), levelData);
+
+                var targetPath = Path.Combine(ProjectFolder!, $"levels/{_level.root.name}.owblevel");
+
+                if (_levelPath == null)
+                {
+                    if (File.Exists(targetPath))
+                    {
+                        ShowDialog("Overwrite existing level", $"Level file {targetPath} already exists. Overwrite?", new string[] { "Ok", "Cancel" }, (choice) =>
+                        {
+                            if (choice == 0)
+                            {
+                                File.WriteAllText(targetPath, levelData);
+                                _levelPath = targetPath;
+                                _levelModified = false;
+                                UpdateWindowTitle();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        File.WriteAllText(targetPath, levelData);
+                        _levelPath = targetPath;
+                        _levelModified = false;
+                        UpdateWindowTitle();
+                    }
+                }
+                else
+                {
+                    File.WriteAllText(targetPath, levelData);
+                    _levelModified = false;
+                    UpdateWindowTitle();
+                }
+            }, new Hotkey
+            {
+                ctrl = true,
+                key = Keys.S
             });
 
             _undoMenuItem = AddMenuItem("Edit/Undo", () => {
@@ -380,6 +436,15 @@ namespace OpenWorldBuilder
             }
         }
 
+        private void UpdateWindowTitle()
+        {
+            Window.Title = $"Open World Builder - {_projectPath ?? "Unsaved Project"} - {_levelPath ?? "Unsaved Level"}";
+            if (_levelModified)
+            {
+                Window.Title += "*";
+            }
+        }
+
         private void UpdateUndoRedoMenu()
         {
             _undoMenuItem.enabled = _undoStack.Count > 0;
@@ -498,6 +563,9 @@ namespace OpenWorldBuilder
             UpdateUndoRedoMenu();
 
             callback.Invoke();
+
+            _levelModified = true;
+            UpdateWindowTitle();
         }
 
         public void ClearUndoRedo()
@@ -516,6 +584,9 @@ namespace OpenWorldBuilder
                 _redoStack.Push(cmd);
 
                 UpdateUndoRedoMenu();
+
+                _levelModified = true;
+                UpdateWindowTitle();
             }
         }
 
@@ -528,6 +599,9 @@ namespace OpenWorldBuilder
                 _undoStack.Push(cmd);
 
                 UpdateUndoRedoMenu();
+
+                _levelModified = true;
+                UpdateWindowTitle();
             }
         }
 
@@ -583,6 +657,12 @@ namespace OpenWorldBuilder
             return item;
         }
 
+        public void ShowDialog(string title, string message, string[] buttons, Action<int>? callback = null)
+        {
+            _activeDialog = new DialogBox(title, message, buttons, callback);
+            _dialogOpenQueued = true;
+        }
+
         public void AddNodeFactory(AssetNodeFactory nodeFactory)
         {
             _nodeFactories.Add(nodeFactory);
@@ -619,12 +699,14 @@ namespace OpenWorldBuilder
             return null;
         }
 
-        public void ChangeLevel(Level level)
+        public void ChangeLevel(string path, Level level)
         {
             _level.Dispose();
             _level = level;
+            _levelPath = path;
             level.root.OnLoad();
             ClearUndoRedo();
+            UpdateWindowTitle();
         }
 
         public void UpdateLevelFolder()
@@ -741,6 +823,40 @@ namespace OpenWorldBuilder
             }
 
             _windows.RemoveAll(x => x.IsOpen == false);
+            
+            if (_activeDialog != null)
+            {
+                if (_dialogOpenQueued)
+                {
+                    ImGui.OpenPopup(_activeDialog.title);
+                    _dialogOpenQueued = false;
+                }
+
+                bool closed = false;
+
+                if (ImGui.BeginPopupModal(_activeDialog.title))
+                {
+                    ImGui.Text(_activeDialog.message);
+                    ImGui.Spacing();
+
+                    for (int i = 0; i < _activeDialog.buttons.Length; i++)
+                    {
+                        if (i > 0) ImGui.SameLine();
+                        if (ImGui.Button(_activeDialog.buttons[i]))
+                        {
+                            _activeDialog.callback?.Invoke(i);
+                            closed = true;
+                        }
+                    }
+
+                    ImGui.EndPopup();
+                }
+
+                if (closed)
+                {
+                    _activeDialog = null;
+                }
+            }
         }
 
         private void CheckMenuHotkeys(MenuContainer c)

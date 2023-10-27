@@ -10,6 +10,8 @@ int DirectionalLightCount;
 int PointLightCount;
 int SpotLightCount;
 
+float3 AmbientLightColor;
+
 float3 DirectionalLightFwd[4];
 float3 DirectionalLightCol[4];
 
@@ -94,7 +96,7 @@ float3 CalcSpotLight(float4 lightPosRadius, float4 lightDirAngle1, float4 lightC
 }
 
 float3 BasicLitPS_Core(float3 diffuse, float3 wpos, float3 normal) {
-    float3 col = float3(0, 0, 0);
+    float3 col = diffuse * AmbientLightColor;
     int i = 0;
 
     for (i = 0; i < DirectionalLightCount; i++) {

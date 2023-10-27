@@ -82,10 +82,11 @@ namespace OpenWorldBuilder
                         {
                             JsonSerializerSettings settings = new JsonSerializerSettings();
                             settings.Converters.Add(new JsonNodeConverter());
-                            
-                            string levelJson = File.ReadAllText(Path.Combine(App.Instance!.ProjectFolder!, "levels", file.path));
+
+                            string levelPath = Path.Combine(App.Instance!.ProjectFolder!, "levels", file.path);
+                            string levelJson = File.ReadAllText(levelPath);
                             Level level = JsonConvert.DeserializeObject<Level>(levelJson, settings)!;
-                            App.Instance!.ChangeLevel(level);
+                            App.Instance!.ChangeLevel(levelPath, level);
                         }
                         catch {}
                     }

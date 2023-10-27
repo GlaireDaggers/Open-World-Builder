@@ -238,20 +238,4 @@ namespace OpenWorldBuilder
             }
         }
     }
-
-    /// <summary>
-    /// Base class for the root node containing the entire level
-    /// </summary>
-    [SerializedNode("SceneRootNode")]
-    public class SceneRootNode : Node
-    {
-        public override void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)
-        {
-        }
-
-        public override void DrawInspector()
-        {
-            ImGui.InputText("Name", ref name, 1024);
-        }
-    }
 }
