@@ -306,6 +306,11 @@ namespace OpenWorldBuilder
                         }
                         ImGui.EndDragDropTarget();
                     }
+                    ImGui.SameLine();
+                    if (ImGui.Button("Clear##" + fieldName))
+                    {
+                        n = "";
+                    }
                     fieldData = n;
                 break;
             }
