@@ -309,6 +309,13 @@ namespace OpenWorldBuilder
         {
             base.OnExiting(sender, args);
 
+            // save project if possible
+            if (_projectPath is string path)
+            {
+                string projData = JsonConvert.SerializeObject(_project);
+                File.WriteAllText(path, projData);
+            }
+
             _config.openWindows.Clear();
 
             // serialize user config
