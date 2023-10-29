@@ -18,6 +18,9 @@ namespace OpenWorldBuilder
             [JsonProperty]
             public Quaternion rotation;
 
+            [JsonProperty]
+            public bool visible;
+
             public Vector3 Normal
             {
                 get
@@ -49,6 +52,7 @@ namespace OpenWorldBuilder
             {
                 this.position = position;
                 normal.Z *= -1f;
+                visible = true;
 
                 if (normal == Vector3.Up)
                     this.rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-90f));
@@ -99,6 +103,23 @@ namespace OpenWorldBuilder
                     if (ImGui.Button($"Edit##cp_{i}"))
                     {
                         _editPlane = i;
+                    }
+
+                    bool prevVisible = clipPlane.visible;
+                    bool newVisible = clipPlane.visible;
+                    if (ImGui.Checkbox($"Visible##cp_{i}", ref newVisible))
+                    {
+                        App.Instance!.BeginRecordUndo("Change Clip Plane Visible", () => {
+                            clipPlane.visible = prevVisible;
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+
+                        App.Instance!.EndRecordUndo(() => {
+                            clipPlane.visible = newVisible;
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
                     }
 
                     _meshDirty |= ImGuiExt.DragFloat3($"Position##cp_{i}", ref clipPlane.position);
@@ -265,6 +286,48 @@ namespace OpenWorldBuilder
                 viewport.DrawLineGizmo(pos, pos + bx, Color.Red, Color.Red);
                 viewport.DrawLineGizmo(pos, pos + by, Color.Green, Color.Green);
             }
+
+            if (selected)
+            {
+                for (int i = 0; i < planes.Count; i++)
+                {
+                    if (planes[i].visible) continue;
+
+                    Vector3 bx = planes[i].BasisX;
+                    Vector3 by = planes[i].BasisY;
+
+                    // construct initial triangle
+                    tmpPolyA.Clear();
+                    tmpPolyB.Clear();
+                    tmpPolyA.Add(planes[i].position + (by * 1000.0f));
+                    tmpPolyA.Add(planes[i].position - (by * 1000.0f) - (bx * 1000.0f));
+                    tmpPolyA.Add(planes[i].position - (by * 1000.0f) + (bx * 1000.0f));
+
+                    for (int j = 0; j < planes.Count; j++)
+                    {
+                        if (j == i) continue;
+                        ClipPolygon(tmpPolyA, tmpPolyB, planes[j]);
+                        tmpPolyA.Clear();
+                        tmpPolyA.AddRange(tmpPolyB);
+                        tmpPolyB.Clear();
+                    }
+
+                    // draw clipped polygon
+                    for (int v = 0; v < tmpPolyA.Count; v++)
+                    {
+                        int cur = v;
+                        int next = (v + 1) % tmpPolyA.Count;
+
+                        Vector3 a = tmpPolyA[cur];
+                        Vector3 b = tmpPolyA[next];
+
+                        a = Vector3.Transform(a, World);
+                        b = Vector3.Transform(b, World);
+
+                        viewport.DrawLineGizmo(a, b, Color.White, Color.White);
+                    }
+                }
+            }
         }
 
         private void GenerateMesh()
@@ -279,6 +342,8 @@ namespace OpenWorldBuilder
             for (int i = 0; i < planes.Count; i++)
             {
                 var face = planes[i];
+                if (!face.visible) continue;
+
                 List<GltfUtil.MeshVert> vertices = new List<GltfUtil.MeshVert>();
                 List<ushort> indices = new List<ushort>();
 
