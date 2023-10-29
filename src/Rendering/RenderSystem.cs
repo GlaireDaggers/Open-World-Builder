@@ -34,9 +34,21 @@ namespace OpenWorldBuilder
             public RenderMaterial material;
         }
 
+        public struct RenderLight
+        {
+            public Vector3 position;
+            public Vector3 forward;
+            public LightType lightType;
+            public Color color;
+            public float intensity;
+            public float radius;
+            public float innerConeAngle;
+            public float outerConeAngle;
+        }
+
         private List<RenderMesh> _opaqueQueue = new List<RenderMesh>();
         private List<RenderMesh> _transparentQueue = new List<RenderMesh>();
-        private List<LightNode> _lights = new List<LightNode>();
+        private List<RenderLight> _lights = new List<RenderLight>();
         
         private Matrix _cachedView;
 
@@ -55,6 +67,23 @@ namespace OpenWorldBuilder
 
             // draw implementation
             OnDraw(view, projection, _lights, _opaqueQueue, _transparentQueue);
+        }
+
+        public void SubmitMesh(RenderMesh renderMesh)
+        {
+            if (renderMesh.material.alphaMode == RenderMaterialAlphaMode.Blend)
+            {
+                _transparentQueue.Add(renderMesh);
+            }
+            else
+            {
+                _opaqueQueue.Add(renderMesh);
+            }
+        }
+
+        public void SubmitLight(RenderLight light)
+        {
+            _lights.Add(light);
         }
 
         private int SortMeshFrontToBack(RenderMesh a, RenderMesh b)
@@ -81,41 +110,7 @@ namespace OpenWorldBuilder
 
         private void GatherLists(Node node)
         {
-            if (node is StaticMeshNode staticMesh && staticMesh.Model != null && staticMesh.visible)
-            {
-                var nodeTransform = node.World;
-
-                // sort static mesh parts into opaque & transparent queues
-                foreach (var meshNode in staticMesh.Model.nodes)
-                {
-                    var mesh = staticMesh.Model.meshes[meshNode.meshIdx];
-
-                    foreach (var part in mesh.meshParts)
-                    {
-                        var mat = staticMesh.Model.materials[part.materialIdx];
-                        
-                        var renderMesh = new RenderMesh
-                        {
-                            transform = meshNode.transform * nodeTransform,
-                            meshPart = part,
-                            material = mat
-                        };
-
-                        if (mat.alphaMode == RenderMaterialAlphaMode.Blend)
-                        {
-                            _transparentQueue.Add(renderMesh);
-                        }
-                        else
-                        {
-                            _opaqueQueue.Add(renderMesh);
-                        }
-                    }
-                }
-            }
-            else if (node is LightNode light)
-            {
-                _lights.Add(light);
-            }
+            node.DrawScene(this);
 
             foreach (var child in node.Children)
             {
@@ -123,7 +118,7 @@ namespace OpenWorldBuilder
             }
         }
 
-        protected virtual void OnDraw(Matrix view, Matrix projection, List<LightNode> lights, List<RenderMesh> opaqueQueue, List<RenderMesh> transparentQueue)
+        protected virtual void OnDraw(Matrix view, Matrix projection, List<RenderLight> lights, List<RenderMesh> opaqueQueue, List<RenderMesh> transparentQueue)
         {
         }
     }

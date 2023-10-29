@@ -170,9 +170,25 @@ namespace OpenWorldBuilder
             }
         }
 
-        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        public override void DrawScene(RenderSystem renderSystem)
         {
-            base.Draw(view, projection, viewport, selected);
+            base.DrawScene(renderSystem);
+            renderSystem.SubmitLight(new RenderSystem.RenderLight
+            {
+                position = World.Translation,
+                forward = Vector3.TransformNormal(Vector3.UnitZ, World),
+                lightType = lightType,
+                color = color,
+                intensity = intensity,
+                radius = radius,
+                innerConeAngle = innerConeAngle,
+                outerConeAngle = outerConeAngle
+            });
+        }
+
+        public override void DrawGizmos(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        {
+            base.DrawGizmos(view, projection, viewport, selected);
 
             Matrix trs = World;
             trs.Decompose(out _, out var worldRot, out var worldPos);

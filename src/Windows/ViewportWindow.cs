@@ -281,23 +281,22 @@ namespace OpenWorldBuilder
             ImGui.PopStyleVar();
         }
 
-        public void GlobalTransformHandle(ref Vector3 position, ref Quaternion rotation, ref Vector3 scale, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
+        public bool GlobalTransformHandle(ref Vector3 position, ref Quaternion rotation, ref Vector3 scale, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
         {
             switch (_transformOp)
             {
                 case TransformOperation.Translate:
-                    PositionHandle(ref position, rotation, parentMatrix, localSpace, start, end);
-                    break;
+                    return PositionHandle(ref position, rotation, parentMatrix, localSpace, start, end);
                 case TransformOperation.Rotate:
-                    RotationHandle(ref rotation, position, parentMatrix, localSpace, start, end);
-                    break;
+                    return RotationHandle(ref rotation, position, parentMatrix, localSpace, start, end);
                 case TransformOperation.Scale:
-                    ScaleHandle(ref scale, rotation, position, parentMatrix, localSpace, start, end);
-                    break;
+                    return ScaleHandle(ref scale, rotation, position, parentMatrix, localSpace, start, end);
             }
+
+            return false;
         }
 
-        public void PositionHandle(ref Vector3 position, Quaternion rotation, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
+        public bool PositionHandle(ref Vector3 position, Quaternion rotation, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
         {
             int id = _gizmoId++;
             ImGuizmo.SetID(id);
@@ -324,9 +323,11 @@ namespace OpenWorldBuilder
                     end?.Invoke();
                 }
             }
+
+            return mod;
         }
 
-        public void RotationHandle(ref Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
+        public bool RotationHandle(ref Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
         {
             int id = _gizmoId++;
             ImGuizmo.SetID(id);
@@ -353,9 +354,11 @@ namespace OpenWorldBuilder
                     end?.Invoke();
                 }
             }
+
+            return mod;
         }
 
-        public void ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
+        public bool ScaleHandle(ref Vector3 scale, Quaternion rotation, Vector3 position, Matrix parentMatrix, bool localSpace = false, Action? start = null, Action? end = null)
         {
             int id = _gizmoId++;
             ImGuizmo.SetID(id);
@@ -382,6 +385,8 @@ namespace OpenWorldBuilder
                     end?.Invoke();
                 }
             }
+
+            return mod;
         }
 
         protected virtual void DrawViewport(Matrix view, Matrix projection)

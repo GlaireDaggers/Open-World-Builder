@@ -159,9 +159,9 @@ namespace OpenWorldBuilder
             }
         }
 
-        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        public override void DrawGizmos(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
         {
-            base.Draw(view, projection, viewport, selected);
+            base.DrawGizmos(view, projection, viewport, selected);
 
             var trs = World;
 

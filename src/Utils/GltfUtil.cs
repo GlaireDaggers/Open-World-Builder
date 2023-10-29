@@ -64,7 +64,7 @@ namespace OpenWorldBuilder
 
     public static class GltfUtil
     {
-        private static VertexDeclaration MeshVertDeclaration = new VertexDeclaration(
+        public static VertexDeclaration MeshVertDeclaration = new VertexDeclaration(
             new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
             new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
             new VertexElement(24, VertexElementFormat.Vector4, VertexElementUsage.Tangent, 0),
@@ -72,7 +72,7 @@ namespace OpenWorldBuilder
             new VertexElement(48, VertexElementFormat.Color, VertexElementUsage.Color, 0)
         );
 
-        private struct MeshVert
+        public struct MeshVert
         {
             public Vector3 pos;
             public Vector3 normal;

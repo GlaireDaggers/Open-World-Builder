@@ -303,6 +303,14 @@ namespace OpenWorldBuilder
                 AddNodeWithUndo("Create Spline", node);
             });
 
+            AddMenuItem("Nodes/New Brush", () => {
+                BrushNode node = new BrushNode
+                {
+                    name = "Brush"
+                };
+                AddNodeWithUndo("Create Brush", node);
+            });
+
             AddMenuItem("Nodes/Lights/New Point Light", () => {
                 LightNode node = new LightNode
                 {

@@ -137,7 +137,11 @@ namespace OpenWorldBuilder
             child.Parent = null;
         }
 
-        public virtual void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        public virtual void DrawGizmos(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        {
+        }
+
+        public virtual void DrawScene(RenderSystem renderSystem)
         {
         }
 

@@ -49,9 +49,9 @@ namespace OpenWorldBuilder
             _model = null;
         }
 
-        public override void Draw(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
+        public override void DrawGizmos(Matrix view, Matrix projection, ViewportWindow viewport, bool selected)
         {
-            base.Draw(view, projection, viewport, selected);
+            base.DrawGizmos(view, projection, viewport, selected);
 
             if (collision != CollisionType.None && selected)
             {
@@ -68,6 +68,36 @@ namespace OpenWorldBuilder
                         {
                             viewport.DrawWireframeMeshGizmo(nodeTransform, meshpart.ib, meshpart.vb, Color.DarkCyan);
                         }
+                    }
+                }
+            }
+        }
+
+        public override void DrawScene(RenderSystem renderSystem)
+        {
+            base.DrawScene(renderSystem);
+
+            if (visible && _model != null)
+            {
+                var nodeTransform = World;
+
+                // sort static mesh parts into opaque & transparent queues
+                foreach (var meshNode in _model.nodes)
+                {
+                    var mesh = _model.meshes[meshNode.meshIdx];
+
+                    foreach (var part in mesh.meshParts)
+                    {
+                        var mat = _model.materials[part.materialIdx];
+                        
+                        var renderMesh = new RenderSystem.RenderMesh
+                        {
+                            transform = meshNode.transform * nodeTransform,
+                            meshPart = part,
+                            material = mat
+                        };
+                        
+                        renderSystem.SubmitMesh(renderMesh);
                     }
                 }
             }

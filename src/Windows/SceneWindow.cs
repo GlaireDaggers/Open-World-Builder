@@ -39,7 +39,7 @@ namespace OpenWorldBuilder
 
         private void DrawNode(Node node, Matrix view, Matrix proj)
         {
-            node.Draw(view, proj, this, node == App.Instance!.activeNode);
+            node.DrawGizmos(view, proj, this, node == App.Instance!.activeNode);
 
             foreach (var child in node.Children)
             {

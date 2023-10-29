@@ -17,9 +17,9 @@ namespace OpenWorldBuilder
         private Vector4[] _spotLightFwdAngle1 = new Vector4[8];
         private Vector4[] _spotLightColorAngle2 = new Vector4[8];
 
-        private List<LightNode> _tmpDirectional = new List<LightNode>();
-        private List<LightNode> _tmpPointLights = new List<LightNode>();
-        private List<LightNode> _tmpSpotLights = new List<LightNode>();
+        private List<RenderLight> _tmpDirectional = new List<RenderLight>();
+        private List<RenderLight> _tmpPointLights = new List<RenderLight>();
+        private List<RenderLight> _tmpSpotLights = new List<RenderLight>();
 
         private Vector3 _cachedMeshPos = Vector3.Zero;
 
@@ -28,7 +28,7 @@ namespace OpenWorldBuilder
             _basicLit = App.Instance!.Content.Load<Effect>("content/shader/BasicLit.fxo");
         }
 
-        protected override void OnDraw(Matrix view, Matrix projection, List<LightNode> lights, List<RenderMesh> opaqueQueue, List<RenderMesh> transparentQueue)
+        protected override void OnDraw(Matrix view, Matrix projection, List<RenderLight> lights, List<RenderMesh> opaqueQueue, List<RenderMesh> transparentQueue)
         {
             _tmpDirectional.Clear();
             _tmpPointLights.Clear();
@@ -51,7 +51,7 @@ namespace OpenWorldBuilder
 
             for (int i = 0; i < dirLightCount; i++)
             {
-                _directionalLightFwd[i] = Vector3.TransformNormal(Vector3.UnitZ, _tmpDirectional[i].World);
+                _directionalLightFwd[i] = _tmpDirectional[i].forward;
                 _directionalLightColor[i] = _tmpDirectional[i].color.ToVector3() * _tmpDirectional[i].intensity;
             }
 
@@ -91,7 +91,7 @@ namespace OpenWorldBuilder
 
                 for (int i = 0; i < pointLightCount; i++)
                 {
-                    _pointLightPosRadius[i] = new Vector4(_tmpPointLights[i].World.Translation, _tmpPointLights[i].radius);
+                    _pointLightPosRadius[i] = new Vector4(_tmpPointLights[i].position, _tmpPointLights[i].radius);
                     _pointLightColor[i] = _tmpPointLights[i].color.ToVector3() * _tmpPointLights[i].intensity;
                 }
 
@@ -108,8 +108,8 @@ namespace OpenWorldBuilder
                     float angle1 = MathF.Cos(MathHelper.ToRadians(_tmpSpotLights[i].innerConeAngle));
                     float angle2 = MathF.Cos(MathHelper.ToRadians(_tmpSpotLights[i].outerConeAngle));
 
-                    _spotLightPosRadius[i] = new Vector4(_tmpSpotLights[i].World.Translation, _tmpSpotLights[i].radius);
-                    _spotLightFwdAngle1[i] = new Vector4(Vector3.TransformNormal(Vector3.UnitZ, _tmpSpotLights[i].World), angle1);
+                    _spotLightPosRadius[i] = new Vector4(_tmpSpotLights[i].position, _tmpSpotLights[i].radius);
+                    _spotLightFwdAngle1[i] = new Vector4(_tmpSpotLights[i].forward, angle1);
                     _spotLightColorAngle2[i] = new Vector4(_tmpSpotLights[i].color.ToVector3() * _tmpSpotLights[i].intensity, angle2);
                 }
 
@@ -147,10 +147,10 @@ namespace OpenWorldBuilder
             }
         }
 
-        private int SortLightsByDistance(LightNode a, LightNode b)
+        private int SortLightsByDistance(RenderLight a, RenderLight b)
         {
-            float distA = Vector3.DistanceSquared(a.World.Translation, _cachedMeshPos);
-            float distB = Vector3.DistanceSquared(b.World.Translation, _cachedMeshPos);
+            float distA = Vector3.DistanceSquared(a.position, _cachedMeshPos);
+            float distB = Vector3.DistanceSquared(b.position, _cachedMeshPos);
 
             return distA.CompareTo(distB);
         }
