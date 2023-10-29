@@ -265,43 +265,6 @@ namespace OpenWorldBuilder
                 viewport.DrawLineGizmo(pos, pos + bx, Color.Red, Color.Red);
                 viewport.DrawLineGizmo(pos, pos + by, Color.Green, Color.Green);
             }
-
-            for (int i = 0; i < planes.Count; i++)
-            {
-                Vector3 bx = planes[i].BasisX;
-                Vector3 by = planes[i].BasisY;
-
-                // construct initial triangle
-                tmpPolyA.Clear();
-                tmpPolyB.Clear();
-                tmpPolyA.Add(planes[i].position + (by * 1000.0f));
-                tmpPolyA.Add(planes[i].position - (by * 1000.0f) - (bx * 1000.0f));
-                tmpPolyA.Add(planes[i].position - (by * 1000.0f) + (bx * 1000.0f));
-
-                for (int j = 0; j < planes.Count; j++)
-                {
-                    if (j == i) continue;
-                    ClipPolygon(tmpPolyA, tmpPolyB, planes[j]);
-                    tmpPolyA.Clear();
-                    tmpPolyA.AddRange(tmpPolyB);
-                    tmpPolyB.Clear();
-                }
-
-                // draw clipped polygon
-                for (int v = 0; v < tmpPolyA.Count; v++)
-                {
-                    int cur = v;
-                    int next = (v + 1) % tmpPolyA.Count;
-
-                    Vector3 a = tmpPolyA[cur];
-                    Vector3 b = tmpPolyA[next];
-
-                    a = Vector3.Transform(a, World);
-                    b = Vector3.Transform(b, World);
-
-                    viewport.DrawLineGizmo(a, b, Color.White, Color.White);
-                }
-            }
         }
 
         private void GenerateMesh()
