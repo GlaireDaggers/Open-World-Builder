@@ -132,6 +132,7 @@ namespace OpenWorldBuilder
                         _project = proj;
                         _level.Dispose();
                         _level = new Level();
+                        activeNode = null;
                         _projectPath = result.Path;
                         if (!_config.recentProjects.Contains(result.Path))
                         {
@@ -158,6 +159,7 @@ namespace OpenWorldBuilder
                         _level.Dispose();
                         _level = new Level();
                         _projectPath = projpath;
+                        activeNode = null;
                         UpdateContent();
                         UpdateLevelFolder();
                         ClearUndoRedo();
@@ -221,6 +223,7 @@ namespace OpenWorldBuilder
                 _level.Dispose();
                 _level = new Level();
                 _levelPath = null;
+                activeNode = null;
                 ClearUndoRedo();
                 UpdateWindowTitle();
             }, new Hotkey
@@ -719,6 +722,7 @@ namespace OpenWorldBuilder
             _level.Dispose();
             _level = level;
             _levelPath = path;
+            activeNode = null;
             level.root.OnLoad();
             ClearUndoRedo();
             UpdateWindowTitle();

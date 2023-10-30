@@ -136,157 +136,170 @@ namespace OpenWorldBuilder
                 {
                     int idx = i;
                     var clipPlane = planes[i];
-                    ImGui.Text($"Clip Plane {i}");
-                    ImGui.SameLine();
-                    if (ImGui.Button($"Edit##cp_{i}"))
+
+                    var treeFlags = ImGuiTreeNodeFlags.OpenOnArrow;
+                    if (i == _editPlane)
+                    {
+                        treeFlags |= ImGuiTreeNodeFlags.Selected;
+                    }
+
+                    bool open = ImGui.TreeNodeEx($"Clip Plane {i}", treeFlags);
+
+                    if (ImGui.IsItemClicked())
                     {
                         _editPlane = i;
                     }
 
-                    bool prevVisible = clipPlane.visible;
-                    bool newVisible = clipPlane.visible;
-                    if (ImGui.Checkbox($"Visible##cp_{i}", ref newVisible))
+                    if (open)
                     {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Visible", () => {
-                            clipPlane.visible = prevVisible;
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-
-                        App.Instance!.EndRecordUndo(() => {
-                            clipPlane.visible = newVisible;
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    _meshDirty |= ImGuiExt.DragFloat3($"Position##cp_{i}", ref clipPlane.position);
-                    if (ImGui.IsItemActivated())
-                    {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Position", () => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-                    if (ImGui.IsItemDeactivatedAfterEdit())
-                    {
-                        App.Instance!.EndRecordUndo(() => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    Vector3 euler = MathUtils.ToEulerAngles(clipPlane.rotation);
-                    euler = MathUtils.ToDegrees(euler);
-                    if (ImGuiExt.DragFloat3($"Rotation##cp_{i}", ref euler))
-                    {
-                        _meshDirty = true;
-                        euler = MathUtils.ToRadians(euler);
-                        clipPlane.rotation = MathUtils.ToQuaternion(euler);
-                    }
-
-                    if (ImGui.IsItemActivated())
-                    {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Rotation", () => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-                    if (ImGui.IsItemDeactivatedAfterEdit())
-                    {
-                        App.Instance!.EndRecordUndo(() => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    string prevTexturePath = clipPlane.texturePath;
-                    string newTexturePath = clipPlane.texturePath;
-                    ImGui.InputText($"Texture##cp_{i}", ref newTexturePath, 1024);
-                    
-                    if (ImGui.IsItemActivated())
-                    {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
-                            clipPlane.texturePath = prevTexturePath;
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-                    if (ImGui.IsItemDeactivatedAfterEdit())
-                    {
-                        App.Instance!.EndRecordUndo(() => {
-                            clipPlane.texturePath = newTexturePath;
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    ImGui.SameLine();
-                    if (ImGui.Button($"Browse##cp_tex_{i}"))
-                    {
-                        var result = Dialog.FileOpen("png,jpg,jpeg,dds", App.Instance!.ContentPath);
-                        if (result.IsOk)
+                        bool prevVisible = clipPlane.visible;
+                        bool newVisible = clipPlane.visible;
+                        if (ImGui.Checkbox($"Visible##cp_{i}", ref newVisible))
                         {
-                            var assetPath = Path.GetRelativePath(App.Instance!.ContentPath!, result.Path);
-                            var prevPath = clipPlane.texturePath;
-
-                            App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
-                                clipPlane.texturePath = prevPath;
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Visible", () => {
+                                clipPlane.visible = prevVisible;
                                 planes[idx] = clipPlane;
                                 _meshDirty = true;
                             });
 
                             App.Instance!.EndRecordUndo(() => {
-                                clipPlane.texturePath = assetPath;
+                                clipPlane.visible = newVisible;
                                 planes[idx] = clipPlane;
                                 _meshDirty = true;
                             });
                         }
+
+                        _meshDirty |= ImGuiExt.DragFloat3($"Position##cp_{i}", ref clipPlane.position);
+                        if (ImGui.IsItemActivated())
+                        {
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Position", () => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                        if (ImGui.IsItemDeactivatedAfterEdit())
+                        {
+                            App.Instance!.EndRecordUndo(() => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+
+                        Vector3 euler = MathUtils.ToEulerAngles(clipPlane.rotation);
+                        euler = MathUtils.ToDegrees(euler);
+                        if (ImGuiExt.DragFloat3($"Rotation##cp_{i}", ref euler))
+                        {
+                            _meshDirty = true;
+                            euler = MathUtils.ToRadians(euler);
+                            clipPlane.rotation = MathUtils.ToQuaternion(euler);
+                        }
+
+                        if (ImGui.IsItemActivated())
+                        {
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Rotation", () => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                        if (ImGui.IsItemDeactivatedAfterEdit())
+                        {
+                            App.Instance!.EndRecordUndo(() => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+
+                        string prevTexturePath = clipPlane.texturePath;
+                        string newTexturePath = clipPlane.texturePath;
+                        ImGui.InputText($"Texture##cp_{i}", ref newTexturePath, 1024);
+                        
+                        if (ImGui.IsItemActivated())
+                        {
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
+                                clipPlane.texturePath = prevTexturePath;
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                        if (ImGui.IsItemDeactivatedAfterEdit())
+                        {
+                            App.Instance!.EndRecordUndo(() => {
+                                clipPlane.texturePath = newTexturePath;
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+
+                        ImGui.SameLine();
+                        if (ImGui.Button($"Browse##cp_tex_{i}"))
+                        {
+                            var result = Dialog.FileOpen("png,jpg,jpeg,dds", App.Instance!.ContentPath);
+                            if (result.IsOk)
+                            {
+                                var assetPath = Path.GetRelativePath(App.Instance!.ContentPath!, result.Path);
+                                var prevPath = clipPlane.texturePath;
+
+                                App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
+                                    clipPlane.texturePath = prevPath;
+                                    planes[idx] = clipPlane;
+                                    _meshDirty = true;
+                                });
+
+                                App.Instance!.EndRecordUndo(() => {
+                                    clipPlane.texturePath = assetPath;
+                                    planes[idx] = clipPlane;
+                                    _meshDirty = true;
+                                });
+                            }
+                        }
+
+                        _meshDirty |= ImGuiExt.DragFloat2($"Texture Scale##cp_{i}", ref clipPlane.textureScale);
+                        if (ImGui.IsItemActivated())
+                        {
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Texture Scale", () => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                        if (ImGui.IsItemDeactivatedAfterEdit())
+                        {
+                            App.Instance!.EndRecordUndo(() => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+
+                        _meshDirty |= ImGuiExt.DragFloat2($"Texture Offset##cp_{i}", ref clipPlane.textureOffset);
+                        if (ImGui.IsItemActivated())
+                        {
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Texture Offset", () => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                        if (ImGui.IsItemDeactivatedAfterEdit())
+                        {
+                            App.Instance!.EndRecordUndo(() => {
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+
+                        if (ImGui.Button($"Delete##cp_{i}"))
+                        {
+                            App.Instance!.BeginRecordUndo("Delete Clip Plane", () => {
+                                planes.Insert(idx, clipPlane);
+                                _meshDirty = true;
+                            });
+                            App.Instance!.EndRecordUndo(() => {
+                                planes.RemoveAt(idx);
+                                _meshDirty = true;
+                            });
+                        }
+                        
+                        ImGui.TreePop();
                     }
 
-                    _meshDirty |= ImGuiExt.DragFloat2($"Texture Scale##cp_{i}", ref clipPlane.textureScale);
-                    if (ImGui.IsItemActivated())
-                    {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture Scale", () => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-                    if (ImGui.IsItemDeactivatedAfterEdit())
-                    {
-                        App.Instance!.EndRecordUndo(() => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    _meshDirty |= ImGuiExt.DragFloat2($"Texture Offset##cp_{i}", ref clipPlane.textureOffset);
-                    if (ImGui.IsItemActivated())
-                    {
-                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture Offset", () => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-                    if (ImGui.IsItemDeactivatedAfterEdit())
-                    {
-                        App.Instance!.EndRecordUndo(() => {
-                            planes[idx] = clipPlane;
-                            _meshDirty = true;
-                        });
-                    }
-
-                    if (ImGui.Button($"Delete##cp_{i}"))
-                    {
-                        App.Instance!.BeginRecordUndo("Delete Clip Plane", () => {
-                            planes.Insert(idx, clipPlane);
-                            _meshDirty = true;
-                        });
-                        App.Instance!.EndRecordUndo(() => {
-                            planes.RemoveAt(idx);
-                            _meshDirty = true;
-                        });
-                    }
                     planes[i] = clipPlane;
                 }
 
