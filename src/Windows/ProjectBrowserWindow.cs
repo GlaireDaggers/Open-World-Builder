@@ -29,11 +29,25 @@ namespace OpenWorldBuilder
             title = "Project Browser";
             App.Instance!.OnContentFolderChanged += (newDir) => {
                 Console.WriteLine("Content change detected, refreshing browser...");
-                RebuildFolder(_contentFolder, newDir, newDir);
+                if (newDir != null)
+                {
+                    RebuildFolder(_contentFolder, newDir, newDir);
+                }
+                else
+                {
+                    _contentFolder = new ProjectFolder();
+                }
             };
             App.Instance!.OnLevelFolderChanged += (newDir) => {
                 Console.WriteLine("Level folder change detected, refreshing browser...");
-                RebuildFolder(_levelFolder, newDir, newDir);
+                if (newDir != null)
+                {
+                    RebuildFolder(_levelFolder, newDir, newDir);
+                }
+                else
+                {
+                    _levelFolder = new ProjectFolder();
+                }
             };
         }
 

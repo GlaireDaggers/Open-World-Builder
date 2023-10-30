@@ -10,8 +10,8 @@ using SDL2;
 
 namespace OpenWorldBuilder
 {
-    public delegate void ContentFolderChangedHandler(DirectoryInfo directory);
-    public delegate void LevelFolderChangedHandler(DirectoryInfo directory);
+    public delegate void ContentFolderChangedHandler(DirectoryInfo? directory);
+    public delegate void LevelFolderChangedHandler(DirectoryInfo? directory);
 
     public class App : Game
     {
@@ -121,30 +121,16 @@ namespace OpenWorldBuilder
 
             AddMenuItem("File/New Project", () => {
                 // todo: prompt to save project if changes have been made
-
-                var result = Dialog.FileOpen(".owbproj");
-                if (result.IsOk)
-                {
-                    try
-                    {
-                        string projData = File.ReadAllText(result.Path);
-                        Project proj = JsonConvert.DeserializeObject<Project>(projData)!;
-                        _project = proj;
-                        _level.Dispose();
-                        _level = new Level();
-                        activeNode = null;
-                        _projectPath = result.Path;
-                        if (!_config.recentProjects.Contains(result.Path))
-                        {
-                            _config.recentProjects.Add(result.Path);
-                        }
-                        UpdateContent();
-                        UpdateLevelFolder();
-                        ClearUndoRedo();
-                        UpdateWindowTitle();
-                    }
-                    catch {}
-                }
+                _project = new Project();
+                _level.Dispose();
+                _level = new Level();
+                _levelModified = false;
+                activeNode = null;
+                _projectPath = null;
+                UpdateContent();
+                UpdateLevelFolder();
+                ClearUndoRedo();
+                UpdateWindowTitle();
             });
 
             AddMenuItem("File/Open Project", () => {
@@ -160,7 +146,6 @@ namespace OpenWorldBuilder
                         _project = proj;
                         _level.Dispose();
                         _level = new Level();
-                        _levelModified = false;
                         activeNode = null;
                         _projectPath = result.Path;
                         if (!_config.recentProjects.Contains(result.Path))
@@ -762,6 +747,18 @@ namespace OpenWorldBuilder
 
         public void UpdateLevelFolder()
         {
+            if (_projectPath == null)
+            {
+                if (_levelWatcher != null)
+                {
+                    _levelWatcher.EnableRaisingEvents = false;
+                    _levelWatcher.Dispose();
+                }
+                _levelWatcher = null;
+                OnLevelFolderChanged?.Invoke(null);
+                return;
+            }
+
             string levelFolder = Path.Combine(ProjectFolder!, "levels");
             Directory.CreateDirectory(levelFolder);
 
@@ -808,6 +805,18 @@ namespace OpenWorldBuilder
 
         public void UpdateContent()
         {
+            if (_projectPath == null)
+            {
+                if (_contentWatcher != null)
+                {
+                    _contentWatcher.EnableRaisingEvents = false;
+                    _contentWatcher.Dispose();
+                }
+                _contentWatcher = null;
+                OnContentFolderChanged?.Invoke(null);
+                return;
+            }
+
             try
             {
                 if (_contentWatcher != null)
