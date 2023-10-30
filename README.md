@@ -11,5 +11,20 @@ Inspired by the way LDTK, Ogmo, and Tiled serve as generic 2D tile based editors
 ![Screenshot of OWB Editor scene viewport - editing a custom generic entity](screenshots/scr3.png)
 ![Screenshot of OWB Editor project settings - editing a generic entity definition](screenshots/scr4.png)
 
-## Getting Started
-TODO
+## Dependencies
+Open World Builder requires the .NET 7.0 SDK to compile.
+
+It depends on [FNA](https://github.com/FNA-XNA/FNA), [SDL2-CS](https://github.com/flibitijibibo/SDL2-CS), [ImGui.NET](https://github.com/GlaireDaggers/ImGui.NET), and [NativeFileDialogSharp](https://github.com/milleniumbug/NativeFileDialogSharp).
+
+## Compiling Open World Builder
+Clone Open-World-Builder then:
+
+1. Run `git submodule update --init --recursive` to fetch all submodule dependencies
+2. Open the `src` subfolder in a terminal
+3. Run `dotnet build --configuration Release /p:Platform=x64`
+4. Find the built executable in `src/bin/x64/Release/net7.0/[linux-x64|win-x64]`
+
+## Quick Start
+1. After opening OWB, save a new project by going to File &rarr; Save Project
+2. Open the project settings (Window &rarr; Project Settings) and set your new project's content path (recommended to put a "content" folder next to the project file you saved and set this as your project's content path). This is where all visual assets will reside for level editing (meshes, textures, etc)
+3. To save a new level, open the Hierarchy (Window &rarr; Hierarchy) and the Inspector (Window &rarr; Inspector), change the name of the level by selecting the root node in the Hierarchy and changing it's name in the Inspector, and then press CTRL-S or File &rarr; Save Level. The saved level will appear in the Project Browser (Window &rarr; Project Browser) under the "Levels" dropdown, on-disk as `levels/[level_name].owblevel` next to the project file.
