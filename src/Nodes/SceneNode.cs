@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace OpenWorldBuilder
 {
@@ -9,7 +10,10 @@ namespace OpenWorldBuilder
     [SerializedNode("SceneRootNode")]
     public class SceneRootNode : Node
     {
+        [JsonProperty]
         public Color ambientColor = Color.Black;
+        
+        [JsonProperty]
         public float ambientIntensity = 1f;
 
         public override void DrawHandles(Matrix view, Matrix projection, ViewportWindow viewport, bool localSpace)

@@ -308,6 +308,7 @@ namespace OpenWorldBuilder
                 {
                     name = "Brush"
                 };
+                node.BuildDefaultCube();
                 AddNodeWithUndo("Create Brush", node);
             });
 
@@ -563,6 +564,12 @@ namespace OpenWorldBuilder
 
         public void EndRecordUndo(Action callback)
         {
+            if (_activeCmd == null)
+            {
+                Console.WriteLine("WARNING: called EndRecordUndo w/o matching BeginRecordUndo (might be ImGui.IsItemActivatedAfterUndo returning twice?)");
+                return;
+            }
+
             _activeCmd!.execute = callback;
             _undoStack.Push(_activeCmd);
             _redoStack.Clear();

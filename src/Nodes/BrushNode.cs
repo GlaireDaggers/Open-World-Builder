@@ -1,7 +1,9 @@
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NativeFileDialogSharp;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace OpenWorldBuilder
 {
@@ -20,6 +22,15 @@ namespace OpenWorldBuilder
 
             [JsonProperty]
             public bool visible;
+
+            [JsonProperty]
+            public string texturePath;
+
+            [JsonProperty]
+            public Vector2 textureScale;
+
+            [JsonProperty]
+            public Vector2 textureOffset;
 
             public Vector3 Normal
             {
@@ -53,13 +64,15 @@ namespace OpenWorldBuilder
                 this.position = position;
                 normal.Z *= -1f;
                 visible = true;
+                texturePath = "";
+                textureScale = Vector2.One;
 
                 if (normal == Vector3.Up)
-                    this.rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-90f));
+                    rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-90f));
                 else if (normal == Vector3.Down)
-                    this.rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(90f));
+                    rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(90f));
                 else
-                    this.rotation = Quaternion.CreateFromRotationMatrix(Matrix.CreateLookAt(Vector3.Zero, normal, Vector3.Up));
+                    rotation = Quaternion.CreateFromRotationMatrix(Matrix.CreateLookAt(Vector3.Zero, normal, Vector3.Up));
             }
         }
 
@@ -72,8 +85,9 @@ namespace OpenWorldBuilder
         private int _editPlane = 0;
         private bool _meshDirty = false;
         private List<GltfMeshPart> _meshParts = new List<GltfMeshPart>();
+        private Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
 
-        public BrushNode()
+        public void BuildDefaultCube()
         {
             planes.Add(new ClipPlane(Vector3.UnitX, Vector3.UnitX));
             planes.Add(new ClipPlane(-Vector3.UnitX, -Vector3.UnitX));
@@ -82,6 +96,30 @@ namespace OpenWorldBuilder
             planes.Add(new ClipPlane(Vector3.UnitZ, Vector3.UnitZ));
             planes.Add(new ClipPlane(-Vector3.UnitZ, -Vector3.UnitZ));
             _meshDirty = true;
+        }
+
+        public override void OnDeserialize(JObject jObject)
+        {
+            base.OnDeserialize(jObject);
+            _meshDirty = true;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            foreach (var part in _meshParts)
+            {
+                part.Dispose();
+            }
+
+            foreach (var tex in _textures)
+            {
+                tex.Value.Dispose();
+            }
+
+            _meshParts.Clear();
+            _textures.Clear();
         }
 
         public override void DrawInspector()
@@ -162,6 +200,82 @@ namespace OpenWorldBuilder
                         });
                     }
 
+                    string prevTexturePath = clipPlane.texturePath;
+                    string newTexturePath = clipPlane.texturePath;
+                    ImGui.InputText($"Texture##cp_{i}", ref newTexturePath, 1024);
+                    
+                    if (ImGui.IsItemActivated())
+                    {
+                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
+                            clipPlane.texturePath = prevTexturePath;
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+                    if (ImGui.IsItemDeactivatedAfterEdit())
+                    {
+                        App.Instance!.EndRecordUndo(() => {
+                            clipPlane.texturePath = newTexturePath;
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Browse##cp_tex_{i}"))
+                    {
+                        var result = Dialog.FileOpen("png,jpg,jpeg,dds", App.Instance!.ContentPath);
+                        if (result.IsOk)
+                        {
+                            var assetPath = Path.GetRelativePath(App.Instance!.ContentPath!, result.Path);
+                            var prevPath = clipPlane.texturePath;
+
+                            App.Instance!.BeginRecordUndo("Change Clip Plane Texture", () => {
+                                clipPlane.texturePath = prevPath;
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+
+                            App.Instance!.EndRecordUndo(() => {
+                                clipPlane.texturePath = assetPath;
+                                planes[idx] = clipPlane;
+                                _meshDirty = true;
+                            });
+                        }
+                    }
+
+                    _meshDirty |= ImGuiExt.DragFloat2($"Texture Scale##cp_{i}", ref clipPlane.textureScale);
+                    if (ImGui.IsItemActivated())
+                    {
+                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture Scale", () => {
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+                    if (ImGui.IsItemDeactivatedAfterEdit())
+                    {
+                        App.Instance!.EndRecordUndo(() => {
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+
+                    _meshDirty |= ImGuiExt.DragFloat2($"Texture Offset##cp_{i}", ref clipPlane.textureOffset);
+                    if (ImGui.IsItemActivated())
+                    {
+                        App.Instance!.BeginRecordUndo("Change Clip Plane Texture Offset", () => {
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+                    if (ImGui.IsItemDeactivatedAfterEdit())
+                    {
+                        App.Instance!.EndRecordUndo(() => {
+                            planes[idx] = clipPlane;
+                            _meshDirty = true;
+                        });
+                    }
+
                     if (ImGui.Button($"Delete##cp_{i}"))
                     {
                         App.Instance!.BeginRecordUndo("Delete Clip Plane", () => {
@@ -230,6 +344,14 @@ namespace OpenWorldBuilder
                         metallic = 0f,
                     }
                 };
+
+                var face = planes[meshpart.materialIdx];
+
+                if (_textures.TryGetValue(face.texturePath, out var tex))
+                {
+                    renderMesh.material.albedoTexture = tex;
+                }
+
                 renderSystem.SubmitMesh(renderMesh);
             }
         }
@@ -373,13 +495,17 @@ namespace OpenWorldBuilder
                 // convert polygon into triangle fan
                 foreach (var v in tmpPolyA)
                 {
+                    Vector3 relV = v - face.position;
+                    float tex_u = (Vector3.Dot(relV, bx) * face.textureScale.X) + face.textureOffset.X;
+                    float tex_v = (Vector3.Dot(relV, by) * face.textureScale.Y) + face.textureOffset.X;
+                    
                     vertices.Add(new GltfUtil.MeshVert
                     {
                         pos = v,
                         normal = face.Normal,
                         tangent = new Vector4(bx, 1f),
                         col = Color.White,
-                        uv = Vector2.Zero,
+                        uv = new Vector2(tex_u, tex_v),
                     });
                 }
 
@@ -405,6 +531,19 @@ namespace OpenWorldBuilder
                 };
 
                 _meshParts.Add(meshPart);
+
+                // load texture
+                if (!string.IsNullOrEmpty(face.texturePath) && !_textures.ContainsKey(face.texturePath))
+                {
+                    string fullpath = Path.Combine(App.Instance!.ContentPath, face.texturePath);
+                    try
+                    {
+                        using var texStream = File.OpenRead(fullpath);
+                        Texture2D tex = Texture2D.FromStream(App.Instance!.GraphicsDevice, texStream);
+                        _textures.Add(face.texturePath, tex);
+                    }
+                    catch {}
+                }
             }
         }
 
