@@ -119,7 +119,7 @@ namespace OpenWorldBuilder
 
             AddNodeFactory(new StaticMeshNodeFactory());
 
-            AddMenuItem("File/Open Project", () => {
+            AddMenuItem("File/New Project", () => {
                 // todo: prompt to save project if changes have been made
 
                 var result = Dialog.FileOpen(".owbproj");
@@ -147,6 +147,35 @@ namespace OpenWorldBuilder
                 }
             });
 
+            AddMenuItem("File/Open Project", () => {
+                // todo: prompt to save project if changes have been made
+
+                var result = Dialog.FileOpen(".owbproj");
+                if (result.IsOk)
+                {
+                    try
+                    {
+                        string projData = File.ReadAllText(result.Path);
+                        Project proj = JsonConvert.DeserializeObject<Project>(projData)!;
+                        _project = proj;
+                        _level.Dispose();
+                        _level = new Level();
+                        _levelModified = false;
+                        activeNode = null;
+                        _projectPath = result.Path;
+                        if (!_config.recentProjects.Contains(result.Path))
+                        {
+                            _config.recentProjects.Add(result.Path);
+                        }
+                        UpdateContent();
+                        UpdateLevelFolder();
+                        ClearUndoRedo();
+                        UpdateWindowTitle();
+                    }
+                    catch {}
+                }
+            });
+
             foreach (var proj in _config.recentProjects)
             {
                 string projpath = proj;
@@ -158,6 +187,7 @@ namespace OpenWorldBuilder
                         _project = proj;
                         _level.Dispose();
                         _level = new Level();
+                        _levelModified = false;
                         _projectPath = projpath;
                         activeNode = null;
                         UpdateContent();
@@ -223,6 +253,7 @@ namespace OpenWorldBuilder
                 _level.Dispose();
                 _level = new Level();
                 _levelPath = null;
+                _levelModified = false;
                 activeNode = null;
                 ClearUndoRedo();
                 UpdateWindowTitle();
@@ -722,6 +753,7 @@ namespace OpenWorldBuilder
             _level.Dispose();
             _level = level;
             _levelPath = path;
+            _levelModified = false;
             activeNode = null;
             level.root.OnLoad();
             ClearUndoRedo();
