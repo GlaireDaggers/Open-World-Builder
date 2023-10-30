@@ -85,6 +85,8 @@ namespace OpenWorldBuilder
         private int _gizmoId = 0;
         private int _activeGizmo = -1;
 
+        private Matrix _deltaMatrix = Matrix.Identity;
+
         public ViewportWindow() : base()
         {
             title = "Viewport Window";
@@ -302,7 +304,9 @@ namespace OpenWorldBuilder
             ImGuizmo.SetID(id);
 
             Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
-            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.TRANSLATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+
+            Vector3 snap = App.Instance!.curKeyboardState.IsKeyDown(Keys.LeftControl) ? new Vector3(0.25f, 0.25f, 0.25f) : Vector3.Zero;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.TRANSLATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11, ref _deltaMatrix.M11, ref snap.X);
 
             transform *= Matrix.Invert(parentMatrix);
 
@@ -333,7 +337,9 @@ namespace OpenWorldBuilder
             ImGuizmo.SetID(id);
 
             Matrix transform = Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
-            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.ROTATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+            
+            Vector3 snap = App.Instance!.curKeyboardState.IsKeyDown(Keys.LeftControl) ? new Vector3(5f, 5f, 5f) : Vector3.Zero;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.ROTATE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11, ref _deltaMatrix.M11, ref snap.X);
 
             transform *= Matrix.Invert(parentMatrix);
 
@@ -364,7 +370,9 @@ namespace OpenWorldBuilder
             ImGuizmo.SetID(id);
 
             Matrix transform = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position) * parentMatrix;
-            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11);
+
+            Vector3 snap = App.Instance!.curKeyboardState.IsKeyDown(Keys.LeftControl) ? new Vector3(0.1f, 0.1f, 0.1f) : Vector3.Zero;
+            bool mod = ImGuizmo.Manipulate(ref _cachedView.M11, ref _cachedProj.M11, OPERATION.SCALE, localSpace ? MODE.LOCAL : MODE.WORLD, ref transform.M11, ref _deltaMatrix.M11, ref snap.X);
 
             transform *= Matrix.Invert(parentMatrix);
 
