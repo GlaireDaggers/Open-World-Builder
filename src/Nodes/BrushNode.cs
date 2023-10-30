@@ -77,6 +77,12 @@ namespace OpenWorldBuilder
         }
 
         [JsonProperty]
+        public bool visible = true;
+
+        [JsonProperty]
+        public CollisionType collision = CollisionType.None;
+            
+        [JsonProperty]
         public List<ClipPlane> planes = new List<ClipPlane>();
 
         private List<Vector3> tmpPolyA = new List<Vector3>();
@@ -128,6 +134,31 @@ namespace OpenWorldBuilder
 
             ImGui.Spacing();
 
+            bool prevVisible = visible;
+            bool newVisible = visible;
+            if (ImGui.Checkbox($"Visible", ref newVisible))
+            {
+                App.Instance!.BeginRecordUndo("Change Brush Visible", () => {
+                    visible = prevVisible;
+                });
+
+                App.Instance!.EndRecordUndo(() => {
+                    visible = newVisible;
+                });
+            }
+
+            int col = (int)collision;
+            var prevCollision = collision;
+            if (ImGui.Combo("Collision Type", ref col, "None\0Collide\0Trigger"))
+            {
+                App.Instance!.BeginRecordUndo("Change Brush Collision Type", () => {
+                    collision = prevCollision;
+                });
+                App.Instance!.EndRecordUndo(() => {
+                    collision = (CollisionType)col;
+                });
+            }
+
             if (ImGui.CollapsingHeader("Clip Planes"))
             {
                 ImGui.Text($"{planes.Count} clip plane(s)");
@@ -152,18 +183,18 @@ namespace OpenWorldBuilder
 
                     if (open)
                     {
-                        bool prevVisible = clipPlane.visible;
-                        bool newVisible = clipPlane.visible;
-                        if (ImGui.Checkbox($"Visible##cp_{i}", ref newVisible))
+                        bool prevCPVisible = clipPlane.visible;
+                        bool newCPVisible = clipPlane.visible;
+                        if (ImGui.Checkbox($"Visible##cp_{i}", ref newCPVisible))
                         {
                             App.Instance!.BeginRecordUndo("Change Clip Plane Visible", () => {
-                                clipPlane.visible = prevVisible;
+                                clipPlane.visible = prevCPVisible;
                                 planes[idx] = clipPlane;
                                 _meshDirty = true;
                             });
 
                             App.Instance!.EndRecordUndo(() => {
-                                clipPlane.visible = newVisible;
+                                clipPlane.visible = newCPVisible;
                                 planes[idx] = clipPlane;
                                 _meshDirty = true;
                             });
@@ -336,6 +367,8 @@ namespace OpenWorldBuilder
         {
             base.DrawScene(renderSystem);
 
+            if (!visible) return;
+
             if (_meshDirty)
             {
                 // regenerate mesh
@@ -424,9 +457,11 @@ namespace OpenWorldBuilder
 
             if (selected)
             {
+                Color gizmoColor = collision == CollisionType.None ? Color.White : Color.DarkCyan;
+
                 for (int i = 0; i < planes.Count; i++)
                 {
-                    if (planes[i].visible) continue;
+                    if (planes[i].visible && visible && collision == CollisionType.None) continue;
 
                     Vector3 bx = planes[i].BasisX;
                     Vector3 by = planes[i].BasisY;
@@ -459,7 +494,7 @@ namespace OpenWorldBuilder
                         a = Vector3.Transform(a, World);
                         b = Vector3.Transform(b, World);
 
-                        viewport.DrawLineGizmo(a, b, Color.White, Color.White);
+                        viewport.DrawLineGizmo(a, b, gizmoColor, gizmoColor);
                     }
                 }
             }
