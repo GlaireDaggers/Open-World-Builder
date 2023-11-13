@@ -32,4 +32,5 @@ Clone Open-World-Builder then:
 ## Using OWB files in your game/engine
 OWB outputs two types of files: `.owbproject` and `.owblevel`. These are both simply JSON files.
 A schema describing this format can be found in the `schema` folder in this repository, and example .CS files for use with Newtonsoft.JSON matching this schema can be found in this folder as well.
+
 Note that several types are represented as formatted strings rather than JSON objects (mostly vectors, quaternions, & colors). Wherever applicable, these are annotated with a comment in the `.schema.json` files.
