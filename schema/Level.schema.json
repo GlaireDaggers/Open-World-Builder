@@ -1,0 +1,240 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Level",
+    "definitions": {
+    	"Level": {
+    		"type": "object",
+    		"additionalProperties": false,
+    		"properties": {
+    			"root": {
+    				"$ref": "#/definitions/SceneNode"
+    			}
+    		},
+    		"required": [
+    			"root"
+    		]
+    	},
+    	"Node": {
+    		"type": "object",
+    		"properties": {
+                "type": {
+                    "type": "string"
+                },
+    			"guid": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "rotation": {
+                    "type": "string"
+                },
+                "scale": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Node"
+                    }
+                }
+    		},
+            "required": [
+                "type",
+                "guid",
+                "name",
+                "children",
+                "position",
+                "rotation",
+                "scale"
+            ]
+    	},
+    	"SceneNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"ambientColor": {
+    					"type": "string"
+    				},
+    				"ambientIntensity": {
+    					"type": "number"
+    				}
+    			}},
+    			{"required": [
+    				"ambientColor",
+    				"ambientIntensity"
+    			]}
+    		]
+    	},
+    	"GenericEntityNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"entityDefinition": {
+    					"type": "string",
+    					"format": "uuid"
+    				},
+    				"fields": {
+    					"type": "object"
+    				}
+    			}},
+    			{"required": [
+    				"entityDefinition",
+    				"fields"
+    			]}
+    		]
+    	},
+    	"LightNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"lightType": {
+    					"type": "integer"
+    				},
+    				"color": {
+    					"type": "string"
+    				},
+    				"intensity": {
+    					"type": "number"
+    				},
+    				"radius": {
+    					"type": "number"
+    				},
+    				"innerConeAngle": {
+    					"type": "number"
+    				},
+    				"outerConeAngle": {
+    					"type": "number"
+    				}
+    			}},
+    			{"required": [
+    				"lightType",
+    				"color",
+    				"intensity",
+    				"radius",
+    				"innerConeAngle",
+    				"outerConeAngle"
+    			]}
+    		]
+    	},
+    	"SplineNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"points": {
+    					"type": "array",
+    					"items": {
+    						"$ref": "#/definitions/SplineControlPoint"
+    					}
+    				},
+    				"closed": {
+    					"type": "boolean"
+    				}
+    			}},
+    			{"required": [
+    				"points",
+    				"closed"
+    			]}
+    		]
+    	},
+    	"SplineControlPoint": {
+    		"type": "object",
+    		"properties": {
+                "position": {
+                    "type": "string"
+                },
+                "rotation": {
+                    "type": "string"
+                },
+                "scale": {
+                    "type": "number"
+                }
+    		},
+            "required": [
+                "position",
+                "rotation",
+                "scale"
+            ]
+    	},
+    	"StaticMeshNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"meshPath": {
+    					"type": "string"
+    				},
+    				"visible": {
+    					"type": "boolean"
+    				},
+    				"collision": {
+    					"type": "integer"
+    				}
+    			}},
+    			{"required": [
+    				"meshPath",
+    				"visible",
+    				"collision"
+    			]}
+    		]
+    	},
+    	"BrushNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"visible": {
+    					"type": "boolean"
+    				},
+    				"collision": {
+    					"type": "integer"
+    				},
+    				"planes": {
+    					"type": "array",
+    					"items": {
+    						"$ref": "#/definitions/BrushPlane"
+    					}
+    				}
+    			}},
+    			{"required": [
+    				"visible",
+    				"collision",
+    				"planes"
+    			]}
+    		]
+    	},
+    	"BrushPlane": {
+    		"type": "object",
+    		"properties": {
+                "position": {
+                    "type": "string"
+                },
+                "rotation": {
+                    "type": "string"
+                },
+                "visible": {
+                    "type": "boolean"
+                },
+                "texturePath": {
+                    "type": "string"
+                },
+                "textureScale": {
+                    "type": "string"
+                },
+                "textureOffset": {
+                    "type": "string"
+                }
+    		},
+            "required": [
+                "position",
+                "rotation",
+                "visible",
+                "texturePath",
+                "textureScale",
+                "textureOffset"
+            ]
+    	}
+    }
+}

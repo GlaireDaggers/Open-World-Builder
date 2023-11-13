@@ -1,0 +1,108 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/ProjectDefinition",
+    "definitions": {
+        "ProjectDefinition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "contentPath": {
+                    "type": "string"
+                },
+                "entityDefinitions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EntityDefinition"
+                    }
+                }
+            },
+            "required": [
+                "contentPath",
+                "entityDefinitions"
+            ],
+            "title": "ProjectDefinition"
+        },
+        "EntityDefinition": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "guid": {
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Field"
+                    }
+                },
+                "gizmos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Gizmo"
+                    }
+                }
+            },
+            "required": [
+                "fields",
+                "gizmos",
+                "guid",
+                "name"
+            ],
+            "title": "EntityDefinition"
+        },
+        "Field": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "fieldType": {
+                    "type": "integer"
+                },
+                "isArray": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "fieldType",
+                "isArray",
+                "name"
+            ],
+            "title": "Field"
+        },
+        "Gizmo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "shapeType": {
+                    "type": "integer"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "rotation": {
+                    "type": "string"
+                },
+                "scale": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "color",
+                "position",
+                "rotation",
+                "scale",
+                "shapeType"
+            ],
+            "title": "Gizmo"
+        }
+    }
+}
