@@ -28,13 +28,16 @@
                     "type": "string"
                 },
                 "position": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 },
                 "rotation": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Quaternion (formatted as: '[x], [y], [z], [w]')"
                 },
                 "scale": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 },
                 "children": {
                     "type": "array",
@@ -58,7 +61,8 @@
     			{"$ref": "#/definitions/Node"},
     			{"properties": {
     				"ambientColor": {
-    					"type": "string"
+    					"type": "string",
+                    	"$comment": "Color (formatted as: '[r], [g], [b], [a]')"
     				},
     				"ambientIntensity": {
     					"type": "number"
@@ -96,7 +100,8 @@
     					"type": "integer"
     				},
     				"color": {
-    					"type": "string"
+    					"type": "string",
+                    	"$comment": "Color (formatted as: '[r], [g], [b], [a]')"
     				},
     				"intensity": {
     					"type": "number"
@@ -145,10 +150,12 @@
     		"type": "object",
     		"properties": {
                 "position": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 },
                 "rotation": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Quaternion (formatted as: '[x], [y], [z], [w]')"
                 },
                 "scale": {
                     "type": "number"
@@ -209,10 +216,12 @@
     		"type": "object",
     		"properties": {
                 "position": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 },
                 "rotation": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Quaternion (formatted as: '[x], [y], [z], [w]')"
                 },
                 "visible": {
                     "type": "boolean"
@@ -221,10 +230,12 @@
                     "type": "string"
                 },
                 "textureScale": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector2 (formatted as: '[x], [y]')"
                 },
                 "textureOffset": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector2 (formatted as: '[x], [y]')"
                 }
     		},
             "required": [

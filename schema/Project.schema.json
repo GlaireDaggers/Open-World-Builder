@@ -19,8 +19,7 @@
             "required": [
                 "contentPath",
                 "entityDefinitions"
-            ],
-            "title": "ProjectDefinition"
+            ]
         },
         "EntityDefinition": {
             "type": "object",
@@ -51,8 +50,7 @@
                 "gizmos",
                 "guid",
                 "name"
-            ],
-            "title": "EntityDefinition"
+            ]
         },
         "Field": {
             "type": "object",
@@ -72,8 +70,7 @@
                 "fieldType",
                 "isArray",
                 "name"
-            ],
-            "title": "Field"
+            ]
         },
         "Gizmo": {
             "type": "object",
@@ -83,16 +80,20 @@
                     "type": "integer"
                 },
                 "color": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Color (formatted as: '[r], [g], [b], [a]')"
                 },
                 "position": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 },
                 "rotation": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Quaternion (formatted as: '[x], [y], [z], [w]')"
                 },
                 "scale": {
-                    "type": "string"
+                    "type": "string",
+                    "$comment": "Vector3 (formatted as: '[x], [y], [z]')"
                 }
             },
             "required": [
@@ -101,8 +102,7 @@
                 "rotation",
                 "scale",
                 "shapeType"
-            ],
-            "title": "Gizmo"
+            ]
         }
     }
 }
