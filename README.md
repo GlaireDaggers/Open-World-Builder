@@ -30,7 +30,14 @@ Clone Open-World-Builder then:
 3. To save a new level, open the Hierarchy (Window &rarr; Hierarchy) and the Inspector (Window &rarr; Inspector), change the name of the level by selecting the root node in the Hierarchy and changing it's name in the Inspector, and then press CTRL-S or File &rarr; Save Level. The saved level will appear in the Project Browser (Window &rarr; Project Browser) under the "Levels" dropdown, on-disk as `levels/[level_name].owblevel` next to the project file.
 
 ## Using OWB files in your game/engine
-OWB outputs two types of files: `.owbproject` and `.owblevel`. These are both simply JSON files.
+OWB outputs three types of files: `.owbproject`, `.owblevel`, and `.raw`. The first two are simply JSON files, and the last is used to save both heightmap and splatmap information for terrains.
 A schema describing this format can be found in the `schema` folder in this repository, and example .CS files for use with Newtonsoft.JSON matching this schema can be found in this folder as well.
 
 Note that several types are represented as formatted strings rather than JSON objects (mostly vectors, quaternions, & colors). Wherever applicable, these are annotated with a comment in the `.schema.json` files.
+
+As far as heightmap/splatmap `.raw` files, the formats are as follows:
+
+1. For heightmaps, this stores a headerless blob of 32-bit floating point values (heightmapRes * heightmapRes)
+2. For splatmaps, this stores a headerless blob of 8-bit RGBA values (heightmapRes * heightmapRes)
+
+Heightmap/splatmap files are given a consistent naming convention for loading. For heightmaps, they are stored in the levels folder as `{level name}_{terrain node guid}_heightmap.raw`. For splatmaps, they are stored in the levels folder as `{level name}_{terrain node guid}_splatmap{index}.raw`. There will be one heightmap per terrain, and one splatmap per 4 textures per terrain.

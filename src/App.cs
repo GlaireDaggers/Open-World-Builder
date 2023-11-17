@@ -331,6 +331,14 @@ namespace OpenWorldBuilder
                 AddNodeWithUndo("Create Brush", node);
             });
 
+            AddMenuItem("Nodes/New Terrain", () => {
+                TerrainNode node = new TerrainNode
+                {
+                    name = "Terrain"
+                };
+                AddNodeWithUndo("Create Terrain", node);
+            });
+
             AddMenuItem("Nodes/Lights/New Point Light", () => {
                 LightNode node = new LightNode
                 {

@@ -108,6 +108,27 @@ namespace OWB
         [JsonProperty("visible")]
         public bool Visible { get; set; }
     }
+    
+    public partial class TerrainNode : Node
+    {
+        [JsonProperty("detail")]
+    	public long Detail { get; set; }
+    	
+        [JsonProperty("lodDistanceMultiplier")]
+    	public double LodDistanceMultiplier { get; set; }
+    	
+        [JsonProperty("heightScale")]
+    	public double HeightScale { get; set; }
+    	
+        [JsonProperty("terrainScale")]
+    	public double TerrainScale { get; set; }
+    	
+        [JsonProperty("heightmapRes")]
+    	public long HeightmapRes { get; set; }
+    	
+        [JsonProperty("layers")]
+    	public TerrainLayer[] Layers { get; set; }
+    }
 
 	public partial class SplineControlPoint
     {
@@ -140,5 +161,20 @@ namespace OWB
 
         [JsonProperty("visible")]
         public bool Visible { get; set; }
+    }
+    
+    public partial class TerrainLayer
+    {
+        [JsonProperty("scale")]
+    	public double Scale { get; set; }
+    	
+        [JsonProperty("diffusePath")]
+    	public string DiffusePath { get; set; }
+    	
+        [JsonProperty("normalPath")]
+    	public string NormalPath { get; set; }
+    	
+        [JsonProperty("ormPath")]
+    	public string OrmPath { get; set; }
     }
 }

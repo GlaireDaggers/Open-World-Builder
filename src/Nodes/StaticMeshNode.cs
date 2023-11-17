@@ -73,9 +73,9 @@ namespace OpenWorldBuilder
             }
         }
 
-        public override void DrawScene(RenderSystem renderSystem)
+        public override void DrawScene(RenderSystem renderSystem, Matrix view)
         {
-            base.DrawScene(renderSystem);
+            base.DrawScene(renderSystem, view);
 
             if (visible && _model != null)
             {

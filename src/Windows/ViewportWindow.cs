@@ -58,6 +58,8 @@ namespace OpenWorldBuilder
             public Color col;
         }
 
+        public Viewport viewport { get; private set; }
+
         public CameraParams camera;
 
         private RenderTarget2D? _viewportRT;
@@ -143,6 +145,8 @@ namespace OpenWorldBuilder
             var winPos = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMin();
             var winSize = ImGui.GetContentRegionAvail();
             var aspect = winSize.X / winSize.Y;
+
+            viewport = new Viewport((int)winPos.X, (int)winPos.Y, (int)winSize.X, (int)winSize.Y);
             
             if (_viewportRT == null || _viewportRT.Width != (int)winSize.X || _viewportRT.Height != (int)winSize.Y)
             {

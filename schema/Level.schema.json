@@ -246,6 +246,47 @@
                 "textureScale",
                 "textureOffset"
             ]
+    	},
+    	"TerrainNode": {
+    		"allOf": [
+    			{"$ref": "#/definitions/Node"},
+    			{"properties": {
+    				"detail": "integer",
+    				"lodDistanceMultiplier": "number",
+    				"heightScale": "number",
+    				"terrainScale": "number",
+    				"heightmapRes": "integer",
+    				"layers": {
+    					"type": "array",
+    					"items": {
+    						"$ref": "#/definitions/TerrainLayer"
+    					}
+    				}
+    			}},
+    			{"required": [
+    				"detail",
+    				"lodDistanceMultiplier",
+    				"heightScale",
+    				"terrainScale",
+    				"heightmapRes",
+    				"layers"
+    			]}
+    		]
+    	},
+    	"TerrainLayer": {
+    		"type": "object",
+    		"properties": {
+    			"scale": "number",
+    			"diffusePath": "string",
+    			"normalPath": "string",
+    			"ormPath": "string"
+    		},
+    		"required": [
+    			"scale",
+    			"diffusePath",
+    			"normalPath",
+    			"ormPath"
+    		]
     	}
     }
 }

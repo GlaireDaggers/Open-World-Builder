@@ -87,6 +87,13 @@ namespace OpenWorldBuilder
 
             foreach (var file in folder.files)
             {
+                bool isLevel = file.name.EndsWith(".owblevel");
+
+                if (!isLevel)
+                {
+                    ImGui.BeginDisabled();
+                }
+
                 if (ImGui.TreeNodeEx(file.name, ImGuiTreeNodeFlags.Leaf))
                 {
                     if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
@@ -101,10 +108,16 @@ namespace OpenWorldBuilder
                             string levelJson = File.ReadAllText(levelPath);
                             Level level = JsonConvert.DeserializeObject<Level>(levelJson, settings)!;
                             App.Instance!.ChangeLevel(levelPath, level);
+                            level.root.PostLoad();
                         }
                         catch {}
                     }
                     ImGui.TreePop();
+                }
+
+                if (!isLevel)
+                {
+                    ImGui.EndDisabled();
                 }
             }
         }

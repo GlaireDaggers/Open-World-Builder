@@ -121,6 +121,14 @@ namespace OpenWorldBuilder
         {
         }
 
+        public virtual void PostLoad()
+        {
+            foreach (var child in _children)
+            {
+                child.PostLoad();
+            }
+        }
+
         public void AddChild(Node child)
         {
             Debug.Assert(child != this);
@@ -141,7 +149,7 @@ namespace OpenWorldBuilder
         {
         }
 
-        public virtual void DrawScene(RenderSystem renderSystem)
+        public virtual void DrawScene(RenderSystem renderSystem, Matrix view)
         {
         }
 
