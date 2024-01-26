@@ -52,7 +52,7 @@ namespace OpenWorldBuilder
             
             if (node.GetType().GetCustomAttribute<SerializedNodeAttribute>() is SerializedNodeAttribute attr)
             {
-                jObj.Add("type", (JToken)attr.typeName);
+                jObj.AddFirst(new JProperty("type", attr.typeName));
             }
 
             node.OnSerialize(jObj);
