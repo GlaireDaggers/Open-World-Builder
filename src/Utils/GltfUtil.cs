@@ -180,6 +180,22 @@ namespace OpenWorldBuilder
                         indices[i * 3] = (uint)tris[i].A;
                         indices[(i * 3) + 1] = (uint)tris[i].B;
                         indices[(i * 3) + 2] = (uint)tris[i].C;
+
+                        // if mesh does not have normals, try and generate them instead
+                        // will probably break if vertices are shared by triangles, but oh well.
+                        // this also doesn't handle tangents. too bad, fix your model if you want those :)
+                        if (vnorm == null)
+                        {
+                            var a = vertices[tris[i].A].pos;
+                            var b = vertices[tris[i].B].pos;
+                            var c = vertices[tris[i].C].pos;
+
+                            var n = Vector3.Cross(b - a, c - b);
+
+                            vertices[tris[i].A].normal = n;
+                            vertices[tris[i].B].normal = n;
+                            vertices[tris[i].C].normal = n;
+                        }
                     }
 
                     VertexBuffer vb = new VertexBuffer(gd, MeshVertDeclaration, vertices.Length, BufferUsage.WriteOnly);
